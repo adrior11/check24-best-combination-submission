@@ -1,0 +1,21 @@
+{
+  "name": "best_combination",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start:frontend": "cd frontend && pnpm run dev",
+    "build:frontend": "cd frontend && pnpm run build",
+    "lint:frontend": "cd frontend && pnpm run lint",
+    "start:backend": "cd backend && cargo run",
+    "build:backend": "cd backend && cargo build --release",
+    "format:backend": "cd backend && cargo fmt",
+    "docker:up": "docker-compose up --build",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
