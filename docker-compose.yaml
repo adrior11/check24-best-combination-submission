@@ -20,8 +20,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      MONGO_DB_URL: ${MONGO_DB_URL}
-      FRONTEND_URL: ${FRONTEND_URL}
+      MONGO_DB_URL: ${MONGO_DB_URI}
+      # FRONTEND_URL: ${FRONTEND_URL}
     networks:
       - app-network
     depends_on:

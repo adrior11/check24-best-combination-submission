@@ -1,5 +1,7 @@
 FROM rust:1.80.1 as builder
 
+RUN apt-get update && apt-get install -y musl-tools
+
 WORKDIR /app
 
 RUN rustup target add x86_64-unknown-linux-musl
