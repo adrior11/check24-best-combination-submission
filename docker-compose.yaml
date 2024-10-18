@@ -1,12 +1,15 @@
 services:
   mongodb:
-    image: mongo:latest
+    build:
+      context: ./mongodb
+      dockerfile: Dockerfile
     container_name: mongodb 
     ports:
       - '27019:27017'
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: best_combination
     volumes:
       - mongodb_data:/data/db
     networks:
