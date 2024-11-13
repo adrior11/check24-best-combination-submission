@@ -1,0 +1,67 @@
+name: mongodb
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test-mongodb:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build MongoDB Docker image
+        run: |
+          docker build -t my-mongodb-image ./mongodb
+
+      - name: Run MongoDB container
+        env:
+          MONGO_INITDB_ROOT_USERNAME: root
+          MONGO_INITDB_ROOT_PASSWORD: example
+        run: |
+          docker run -d --name mongodb \
+            -e MONGO_INITDB_ROOT_USERNAME=$MONGO_INITDB_ROOT_USERNAME \
+            -e MONGO_INITDB_ROOT_PASSWORD=$MONGO_INITDB_ROOT_PASSWORD \
+            -p 27017:27017 \
+            my-mongodb-image
+
+      - name: Wait for MongoDB to be ready
+        run: |
+          for i in {1..10}; do
+            if docker exec mongodb mongosh --eval "db.adminCommand('ping')" &>/dev/null; then
+              echo "MongoDB is ready!"
+              break
+            fi
+            echo "Waiting for MongoDB to be ready..."
+            sleep 3
+          done
+
+      - name: Verify collections and document counts
+        run: |
+          bc_game_count=$(docker exec mongodb mongosh best_combination --quiet --eval "db.bc_game.countDocuments()")
+          bc_streaming_offer_count=$(docker exec mongodb mongosh best_combination --quiet --eval "db.bc_streaming_offer.countDocuments()")
+          bc_streaming_package_count=$(docker exec mongodb mongosh best_combination --quiet --eval "db.bc_streaming_package.countDocuments()")
+
+          echo "bc_game count: $bc_game_count"
+          echo "bc_streaming_offer count: $bc_streaming_offer_count"
+          echo "bc_streaming_package count: $bc_streaming_package_count"
+
+          [[ "$bc_game_count" -eq 8871 ]] || { echo "bc_game count mismatch"; exit 1; }
+          [[ "$bc_streaming_offer_count" -eq 32439 ]] || { echo "bc_streaming_offer count mismatch"; exit 1; }
+          [[ "$bc_streaming_package_count" -eq 37 ]] || { echo "bc_streaming_package count mismatch"; exit 1; }
+
+      - name: Cleanup
+        run: docker rm -f mongodb
