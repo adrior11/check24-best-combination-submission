@@ -19,12 +19,15 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    deploy:
+      resources:
+        limits:
+          memory: 4g
     container_name: backend
     ports:
-      - "8000:8000"
+      - "3000:3000"
     environment:
       MONGO_DB_URL: ${MONGO_DB_URI}
-      # FRONTEND_URL: ${FRONTEND_URL}
     networks:
       - app-network
     depends_on:
@@ -42,7 +45,7 @@ services:
       dockerfile: Dockerfile
     container_name: frontend
     ports:
-      - "3000:3000"
+      - "8000:8000"
     networks:
       - app-network
     depends_on:
