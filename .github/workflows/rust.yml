@@ -1,0 +1,75 @@
+name: rust
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        rust: [stable, beta, nightly]
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Cache Cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache Cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-index-
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ matrix.rust }}
+
+      - name: Install Clippy
+        run: rustup component add clippy
+
+      - name: Install Rustfmt
+        run: rustup component add rustfmt
+
+      - name: Build
+        working-directory: ./backend
+        run: cargo build --verbose
+      
+      - name: Run Clippy (Linting)
+        working-directory: ./backend
+        run: cargo clippy -- -D warnings
+
+      - name: Check Code Formatting
+        working-directory: ./backend
+        run: cargo fmt --all --check
+
+      - name: Run Tests
+        working-directory: ./backend
+        run: cargo test --verbose
+
+      - name: Run Tests in Release Mode
+        working-directory: ./backend
+        run: cargo test --release --verbose
+
+      - name: Upload Logs on Failure
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: cargo-logs
+          path: ./backend
