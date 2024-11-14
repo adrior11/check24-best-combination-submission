@@ -1,48 +1,49 @@
-mod macros;
-mod model;
-mod db_utils;
-
-use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
-use dotenv::dotenv;
-#[allow(unused_imports)]
-use mongodb::{bson::doc, options::IndexOptions, Client, Collection, IndexModel};
+use actix_web::web;
+use mongodb::bson;
+use std::{env, io};
 
 #[allow(dead_code)]
 struct AppState {
-    mongo_client: Client,
+    mongo_client: mongodb::Client,
 }
 
-#[get("/")]
-async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
-}
-
-#[get("/health")]
-async fn health_check() -> impl Responder {
-    HttpResponse::Ok().body("Backend is healthy!")
+#[actix_web::get("/")]
+async fn hello() -> impl actix_web::Responder {
+    actix_web::HttpResponse::Ok().body("Hello world!")
 }
 
 #[actix_web::main]
-async fn main() -> std::io::Result<()> {
-    dotenv().ok();
+async fn main() -> io::Result<()> {
+    println!("Setting up backend...");
 
-    let uri = std::env::var("MONGO_DB_URI")
-        .expect("MONGO_DB_URI must be set in .env");
+    dotenv::dotenv().ok();
 
-    let client = Client::with_uri_str(uri).await
-        .expect("Failed to connect");
+    println!("Reading .env variable...");
 
-    db_utils::populate_db(&client).await.expect("Failed to populate the database");
+    let uri = env::var("MONGO_DB_URI").expect("MONGO_DB_URI must be set in .env");
 
-    HttpServer::new(move || {
-        App::new()
+    println!("Connecting to MongoDB...");
+
+    let client = mongodb::Client::with_uri_str(uri)
+        .await
+        .expect("Failed to connect to MongoDB");
+
+    client
+        .database("admin")
+        .run_command(bson::doc! { "ping": 1 })
+        .await
+        .expect("Failed to reach MongoDB server");
+
+    println!("Setting up server...");
+
+    actix_web::HttpServer::new(move || {
+        actix_web::App::new()
             .app_data(web::Data::new(AppState {
                 mongo_client: client.clone(),
             }))
             .service(hello)
-            .service(health_check)
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("0.0.0.0", 8000))? // NOTE: Use from .env
     .run()
     .await
 }
