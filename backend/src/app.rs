@@ -1,5 +1,8 @@
-use crate::{config::database, core};
-use actix_web::{middleware, web};
+use crate::{
+    config::{database, logger},
+    core,
+};
+use actix_web::web;
 use std::{io, sync};
 
 #[allow(dead_code)]
@@ -14,12 +17,12 @@ pub async fn run() -> io::Result<()> {
         client: sync::Arc::new(client),
     });
 
-    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
+    logger::init_logging();
 
     actix_web::HttpServer::new(move || {
         actix_web::App::new()
             .app_data(web::Data::new(app_state.clone()))
-            .wrap(middleware::Logger::new("%a %{User-Agent}i"))
+            .wrap(logger::request_logger())
             .configure(core::configure_routes)
     })
     .bind(("0.0.0.0", 8000))? // NOTE: Use from .env
