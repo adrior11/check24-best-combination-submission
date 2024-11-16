@@ -1,4 +1,4 @@
-id,name,monthly_price_cents,monthly_price_yearly_subscription_in_cents
+streaming_package_id,name,monthly_price_cents,monthly_price_yearly_subscription_in_cents
 2,MagentaTV - MegaSport,,6000
 3,ZDF - Free-TV,0,0
 4,ARD - Free-TV,0,0
