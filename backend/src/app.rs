@@ -1,5 +1,5 @@
 use crate::{
-    config::{database, logger},
+    config::{cache, database, logger},
     core,
 };
 use actix_web::web;
@@ -7,14 +7,18 @@ use std::{io, sync};
 
 #[allow(dead_code)]
 pub struct AppState {
-    pub client: sync::Arc<mongodb::Client>,
+    pub mongo_client: sync::Arc<mongodb::Client>,
+    pub redis_client: sync::Arc<redis::Client>,
 }
 
 pub async fn run() -> io::Result<()> {
-    let client = database::init_mongodb().await.unwrap();
+    let mongo_client = database::init_mongodb().await.unwrap();
+
+    let redis_client = cache::init_redis().await.unwrap();
 
     let app_state = sync::Arc::new(AppState {
-        client: sync::Arc::new(client),
+        mongo_client: sync::Arc::new(mongo_client),
+        redis_client: sync::Arc::new(redis_client)
     });
 
     logger::init_logging();
@@ -25,7 +29,7 @@ pub async fn run() -> io::Result<()> {
             .wrap(logger::request_logger())
             .configure(core::configure_routes)
     })
-    .bind(("0.0.0.0", 8000))? // NOTE: Use from .env
+    .bind(("0.0.0.0", 8000))?
     .run()
     .await
 }

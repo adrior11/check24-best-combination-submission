@@ -13,7 +13,17 @@ services:
     volumes:
       - mongodb_data:/data/db
     networks:
-        - app-network
+      - app-network
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data/redis
+    networks:
+      - app-network
 
   backend:
     build:
@@ -27,11 +37,13 @@ services:
     ports:
       - "8000:8000"
     environment:
-      MONGO_DB_URI: ${MONGO_DB_URI_DOCKER}
+      MONGODB_URI: ${MONGODB_URI_DOCKER}
+      REDIS_URL: ${REDIS_URL}
     networks:
       - app-network
     depends_on:
       - mongodb
+      - redis
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -48,8 +60,8 @@ services:
       - "3000:3000"
     networks:
       - app-network
-    depends_on:
-      - backend
+    # depends_on:
+    #   - backend
     environment:
       BACKEND_URL: ${BACKEND_URL}
     restart: unless-stopped
@@ -60,5 +72,7 @@ networks:
 
 volumes:
   mongodb_data:
+    driver: local
+  redis_data:
     driver: local
 
