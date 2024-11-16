@@ -38,7 +38,7 @@ services:
       - "8000:8000"
     environment:
       MONGODB_URI: ${MONGODB_URI_DOCKER}
-      REDIS_URL: ${REDIS_URL}
+      REDIS_URL: ${REDIS_URL_DOCKER}
       LOG_LEVEL: ${LOG_LEVEL}
     networks:
       - app-network
