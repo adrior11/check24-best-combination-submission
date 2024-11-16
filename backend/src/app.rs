@@ -12,13 +12,15 @@ pub struct AppState {
 }
 
 pub async fn run() -> io::Result<()> {
+    dotenv::dotenv().ok();
+
     let mongo_client = database::init_mongodb().await.unwrap();
 
     let redis_client = cache::init_redis().await.unwrap();
 
     let app_state = sync::Arc::new(AppState {
         mongo_client: sync::Arc::new(mongo_client),
-        redis_client: sync::Arc::new(redis_client)
+        redis_client: sync::Arc::new(redis_client),
     });
 
     logger::init_logging();
