@@ -3,7 +3,7 @@ use actix_web::web;
 use mongodb::error;
 use std::sync;
 
-pub async fn fetch_collection_names(
+pub async fn fetch_all_collection_names(
     app_state: web::Data<sync::Arc<app::AppState>>,
 ) -> Result<Vec<String>, error::Error> {
     let mongo_client = &app_state.mongo_client;
