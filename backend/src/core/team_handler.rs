@@ -2,6 +2,7 @@ use super::{team_mapper, team_service};
 use crate::app;
 use actix_web::{http::header, web};
 use futures::stream::{StreamExt, TryStreamExt};
+use mongodb::error;
 use std::sync;
 
 #[actix_web::get("/teams")]
@@ -17,7 +18,7 @@ async fn get_all_team_names(
             .body("Database connection issue");
     }
 
-    let team_names: Result<Vec<String>, _> = cursor_result
+    let team_names: Result<Vec<String>, error::Error> = cursor_result
         .unwrap()
         .filter_map(team_mapper::map_document_to_team_name)
         .try_collect()
