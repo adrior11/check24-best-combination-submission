@@ -1,7 +1,6 @@
 use crate::{
-    config::{cache, database, logger},
     core,
-    libs::metrics::{self, middleware},
+    libs::{logger, mongo, cache, metrics::{self, middleware}},
 };
 use actix_web::web;
 use std::{io, sync};
@@ -18,7 +17,7 @@ pub async fn run() -> io::Result<()> {
 
     logger::init_logging();
 
-    let mongo_client = database::init_mongodb().await.unwrap();
+    let mongo_client = mongo::init_mongodb().await.unwrap();
 
     let redis_client = cache::init_redis().await.unwrap();
 
