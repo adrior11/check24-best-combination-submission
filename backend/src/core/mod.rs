@@ -1,9 +1,8 @@
-mod health_handler;
-mod metrics_handler;
+mod best_combination;
+mod health;
+mod metrics;
 mod routes;
-mod team_handler;
-mod team_mapper;
-mod team_service;
+mod team;
 mod tests;
 
 pub use routes::configure_routes;

@@ -9,6 +9,7 @@
     "frontend:lint": "cd frontend && pnpm run lint",
     "backend:start": "cd backend && cargo run",
     "backend:build": "cd backend && cargo build --release",
+    "backend:clean": "cd backend && cargo clean",
     "backend:format": "cd backend && cargo fmt --all --check",
     "backend:format-apply": "cd backend && cargo fmt",
     "backend:test": "cd backend && cargo test",

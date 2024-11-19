@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::core::team_mapper;
+    use crate::core::team::team_mapper;
     use mongodb::{bson, error};
 
     #[tokio::test]
