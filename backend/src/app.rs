@@ -1,6 +1,10 @@
 use crate::{
     core,
-    libs::{logger, mongo, cache, metrics::{self, middleware}},
+    libs::{
+        cache, logger,
+        metrics::{self, middleware},
+        mongo,
+    },
 };
 use actix_web::web;
 use std::{io, sync};
