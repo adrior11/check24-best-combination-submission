@@ -1,6 +1,15 @@
-use super::counters;
-use actix_web::{dev, error};
-use std::{pin, task, time};
+use super::counters::{ERROR_COUNT, REQUEST_COUNT, REQUEST_DURATION};
+use actix_web::{
+    dev::{Service, ServiceRequest, ServiceResponse, Transform},
+    http::StatusCode,
+    Error,
+};
+use std::{
+    future::{self, Future, Ready},
+    pin::Pin,
+    task::{Context, Poll},
+    time::Instant,
+};
 
 /// Middleware for collecting Prometheus metrics on HTTP requests.
 ///
@@ -12,23 +21,19 @@ use std::{pin, task, time};
 /// Excludes tracking for specific routes like `/metrics`.
 pub struct MetricsMiddleware;
 
-impl<S, B> dev::Transform<S, dev::ServiceRequest> for MetricsMiddleware
+impl<S, B> Transform<S, ServiceRequest> for MetricsMiddleware
 where
-    S: dev::Service<
-        dev::ServiceRequest,
-        Response = dev::ServiceResponse<B>,
-        Error = actix_web::Error,
-    >,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
 {
-    type Response = dev::ServiceResponse<B>;
-    type Error = actix_web::Error;
+    type Response = ServiceResponse<B>;
+    type Error = Error;
     type Transform = MetricsMiddlewareImpl<S>;
     type InitError = ();
-    type Future = std::future::Ready<Result<Self::Transform, Self::InitError>>;
+    type Future = Ready<Result<Self::Transform, Self::InitError>>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        std::future::ready(Ok(MetricsMiddlewareImpl { service }))
+        future::ready(Ok(MetricsMiddlewareImpl { service }))
     }
 }
 
@@ -36,25 +41,20 @@ pub struct MetricsMiddlewareImpl<S> {
     service: S,
 }
 
-impl<S, B> dev::Service<dev::ServiceRequest> for MetricsMiddlewareImpl<S>
+impl<S, B> Service<ServiceRequest> for MetricsMiddlewareImpl<S>
 where
-    S: dev::Service<
-        dev::ServiceRequest,
-        Response = dev::ServiceResponse<B>,
-        Error = actix_web::Error,
-    >,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
 {
-    type Response = dev::ServiceResponse<B>;
-    type Error = actix_web::Error;
-    type Future =
-        pin::Pin<Box<dyn std::future::Future<Output = Result<Self::Response, Self::Error>>>>;
+    type Response = ServiceResponse<B>;
+    type Error = Error;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
 
-    fn poll_ready(&self, ctx: &mut task::Context<'_>) -> task::Poll<Result<(), Self::Error>> {
+    fn poll_ready(&self, ctx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.service.poll_ready(ctx)
     }
 
-    fn call(&self, req: dev::ServiceRequest) -> Self::Future {
+    fn call(&self, req: ServiceRequest) -> Self::Future {
         let method = req.method().to_string();
         let path = req.path().to_string(); // TODO: Consider dynamic paths (redundant with GraphQL)
 
@@ -64,41 +64,146 @@ where
             return Box::pin(self.service.call(req));
         }
 
-        let start_time = time::Instant::now();
+        let start_time = Instant::now();
         let fut = self.service.call(req);
 
         Box::pin(async move {
-            let response = fut.await.map_err(|err| {
-                counters::ERROR_COUNT.inc();
-                log::error!(
-                    "Request failed: method={}, path={}, error={:?}",
-                    method,
-                    path,
-                    err
-                );
-                error::ErrorInternalServerError(err)
-            });
-
+            let response = fut.await;
             let elapsed = start_time.elapsed().as_secs_f64();
 
-            // Determine HTTP status code
             let status = match &response {
-                Ok(res) => res.response().status().as_u16().to_string(),
+                Ok(res) => res.response().status(),
                 Err(_) => {
-                    counters::ERROR_COUNT.inc();
-                    "500".to_string()
+                    log::debug!("Request failed: method={}, path={}", method, path);
+                    StatusCode::INTERNAL_SERVER_ERROR
                 }
             };
 
+            dbg!(&status);
+
+            // Increament ERROR_COUNT if status code is 5xx
+            if status.is_server_error() {
+                ERROR_COUNT.inc();
+                println!("ERROR-2");
+                log::error!(
+                    "Request failed: method={}, path={}, status={}",
+                    method,
+                    path,
+                    status
+                );
+            }
+
+            let status_code = status.as_u16().to_string();
+
             // Update metrics
-            counters::REQUEST_COUNT
-                .with_label_values(&[&method, &path, &status])
+            REQUEST_COUNT
+                .with_label_values(&[&method, &path, &status_code])
                 .inc();
-            counters::REQUEST_DURATION
-                .with_label_values(&[&method, &path, &status])
+            REQUEST_DURATION
+                .with_label_values(&[&method, &path, &status_code])
                 .observe(elapsed);
 
             response
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::libs::metrics::{
+        counters::{ERROR_COUNT, REQUEST_COUNT, REQUEST_DURATION},
+        registry,
+    };
+    use actix_web::{
+        http::header::ContentType,
+        http::StatusCode,
+        test::{self, TestRequest},
+        App, HttpResponse, Responder,
+    };
+
+    // Utility function to clear metrics state
+    fn reset_metrics() {
+        REQUEST_COUNT.reset();
+        REQUEST_DURATION.reset();
+        ERROR_COUNT.reset();
+    }
+
+    #[actix_web::get("/test")]
+    async fn mock_handler() -> impl Responder {
+        actix_web::HttpResponse::Ok()
+            .content_type(ContentType::plaintext())
+            .body("Hello World!")
+    }
+
+    #[actix_web::get("/error")]
+    async fn error_mock_handler() -> impl Responder {
+        HttpResponse::InternalServerError()
+            .content_type(ContentType::plaintext())
+            .body("Error")
+    }
+
+    #[actix_web::test]
+    async fn test_metrics_middleware_success() {
+        reset_metrics();
+
+        let _ = registry::init_metrics();
+
+        let app =
+            test::init_service(App::new().wrap(MetricsMiddleware).service(mock_handler)).await;
+
+        // Send a GET request to /test
+        assert_eq!(ERROR_COUNT.get(), 0);
+        let req = TestRequest::get().uri("/test").to_request();
+        assert_eq!(ERROR_COUNT.get(), 0);
+        let resp = test::call_service(&app, req).await;
+        assert_eq!(ERROR_COUNT.get(), 0);
+
+        assert_eq!(resp.status(), StatusCode::OK);
+
+        let request_count = REQUEST_COUNT
+            .with_label_values(&["GET", "/test", "200"])
+            .get();
+        assert_eq!(request_count, 1);
+
+        let histogram = REQUEST_DURATION.with_label_values(&["GET", "/test", "200"]);
+        let metrics = histogram.get_sample_sum();
+        assert!(metrics > 0.0);
+
+        let error_count = ERROR_COUNT.get();
+        assert_eq!(error_count, 0);
+    }
+
+    #[actix_web::test]
+    async fn test_metrics_middleware_error() {
+        reset_metrics();
+
+        let _ = registry::init_metrics();
+
+        let app = test::init_service(
+            App::new()
+                .wrap(MetricsMiddleware)
+                .service(error_mock_handler),
+        )
+        .await;
+
+        // Send a GET request to /error
+        let req = TestRequest::get().uri("/error").to_request();
+        let resp = test::call_service(&app, req).await;
+
+        assert_eq!(resp.status(), StatusCode::INTERNAL_SERVER_ERROR);
+
+        let request_count = REQUEST_COUNT
+            .with_label_values(&["GET", "/error", "500"])
+            .get();
+        assert_eq!(request_count, 1);
+
+        let histogram = REQUEST_DURATION.with_label_values(&["GET", "/error", "500"]);
+        let metrics = histogram.get_sample_sum();
+        assert!(metrics > 0.0);
+
+        // ERROR_COUNT should be incremented
+        let error_count = ERROR_COUNT.get();
+        assert_eq!(error_count, 1);
     }
 }
