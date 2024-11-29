@@ -1,5 +1,6 @@
 use crate::{
     api::{resolvers::QueryRoot, schema::AppSchema},
+    core,
     libs::{
         caching, logging,
         metrics::{self, middleware::MetricsMiddleware},
@@ -52,6 +53,7 @@ pub async fn run() -> io::Result<()> {
                     .route(web::post().to(graphql_handler))
                     .route(web::get().to(graphql_playground)),
             )
+            .configure(core::configure_routes)
             .wrap(MetricsMiddleware)
             .wrap(logging::request_logger())
     })
