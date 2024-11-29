@@ -13,6 +13,7 @@
     "backend:format": "cd backend && cargo fmt --all --check",
     "backend:format-apply": "cd backend && cargo fmt",
     "backend:test": "cd backend && cargo test -- --test-threads=1",
+    "backend:lint": "cd backend && cargo clippy -- -D warnings",
     "docker:up": "docker-compose up --build",
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f"
