@@ -1,15 +1,12 @@
 use crate::common::models::{StreamingOffer, StreamingPackage};
-use std::{
-    collections::{BTreeMap, HashSet},
-    error::Error,
-};
+use std::collections::{BTreeMap, HashSet};
 
 // TODO: Accumulate total costs and features
 pub fn set_cover_best_combination(
     game_ids: &[u32],
     packages: &[StreamingPackage],
     offers: &[StreamingOffer],
-) -> Result<HashSet<StreamingPackage>, Box<dyn Error>> {
+) -> anyhow::Result<HashSet<StreamingPackage>> {
     let mut uncovered_games: HashSet<u32> = game_ids.iter().cloned().collect(); // Universe
     let mut bundle: HashSet<StreamingPackage> = HashSet::new(); // Output
     let mut package_to_offers: BTreeMap<u32, Vec<StreamingOffer>> = BTreeMap::new(); // Sets
@@ -33,7 +30,7 @@ pub fn set_cover_best_combination(
 
             let price = package
                 .monthly_price_cents
-                .unwrap_or(package.monthly_price_yearly_subscriptions_in_cents)
+                .unwrap_or(package.monthly_price_yearly_subscription_in_cents)
                 as f32; // TODO: allow filter later on
 
             let newly_covered_games: HashSet<u32> = offers
@@ -94,7 +91,7 @@ mod tests {
         streaming_package_id: u32,
         name: &str,
         monthly_price_cents: Option<u16>,
-        monthly_price_yearly_subscriptions_in_cents: u16,
+        monthly_price_yearly_subscription_in_cents: u16,
     ) -> StreamingPackage {
         let name = name.to_string();
         StreamingPackage {
@@ -102,7 +99,7 @@ mod tests {
             name,
             streaming_package_id,
             monthly_price_cents,
-            monthly_price_yearly_subscriptions_in_cents,
+            monthly_price_yearly_subscription_in_cents,
         }
     }
 
@@ -439,7 +436,7 @@ mod tests {
             .iter()
             .map(|p| {
                 p.monthly_price_cents
-                    .unwrap_or(p.monthly_price_yearly_subscriptions_in_cents) as u32
+                    .unwrap_or(p.monthly_price_yearly_subscription_in_cents) as u32
             })
             .sum();
         let expected_cost = 196;

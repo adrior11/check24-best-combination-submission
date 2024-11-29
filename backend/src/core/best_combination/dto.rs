@@ -2,10 +2,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::common::models::StreamingOffer;
 
+#[allow(dead_code)] // TODO: Replaced with GraphQL
 #[derive(Deserialize)]
 pub struct BestCombinationRequest {
     pub teams: Vec<String>,
-    #[allow(dead_code)] // TODO: Replaced with GraphQL
     pub limit: Option<usize>,
 }
 

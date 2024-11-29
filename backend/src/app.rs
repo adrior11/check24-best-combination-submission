@@ -1,12 +1,17 @@
 use crate::{
-    core,
+    api::{resolvers::QueryRoot, schema::AppSchema},
     libs::{
         caching, logging,
         metrics::{self, middleware::MetricsMiddleware},
         mongo,
     },
 };
-use actix_web::{web::Data, App, HttpServer};
+use actix_web::{
+    web::{self, Data},
+    App, HttpResponse, HttpServer,
+};
+use async_graphql::{EmptyMutation, EmptySubscription, Schema};
+use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
 use prometheus::Registry;
 use std::{io, sync::Arc};
 
@@ -34,14 +39,35 @@ pub async fn run() -> io::Result<()> {
         registry: Arc::new(registry),
     });
 
+    let schema = Schema::build(QueryRoot, EmptyMutation, EmptySubscription)
+        .data(app_state.clone())
+        .finish();
+
     HttpServer::new(move || {
         App::new()
             .app_data(Data::new(app_state.clone()))
+            .app_data(Data::new(schema.clone()))
+            .service(
+                web::resource("/graphql")
+                    .route(web::post().to(graphql_handler))
+                    .route(web::get().to(graphql_playground)),
+            )
             .wrap(MetricsMiddleware)
             .wrap(logging::request_logger())
-            .configure(core::configure_routes)
     })
     .bind(("0.0.0.0", 8000))?
     .run()
     .await
+}
+
+async fn graphql_handler(schema: Data<AppSchema>, req: GraphQLRequest) -> GraphQLResponse {
+    schema.execute(req.into_inner()).await.into()
+}
+
+async fn graphql_playground() -> HttpResponse {
+    HttpResponse::Ok()
+        .content_type("text/html; charset=utf-8")
+        .body(async_graphql::http::playground_source(
+            async_graphql::http::GraphQLPlaygroundConfig::new("/graphql"),
+        ))
 }
