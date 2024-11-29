@@ -1,3 +1,3 @@
-pub mod cache;
+mod cache;
 
 pub use cache::init_redis;

@@ -1,4 +1,4 @@
-pub mod cache;
-pub mod logger;
+pub mod caching;
+pub mod logging;
 pub mod metrics;
 pub mod mongo;

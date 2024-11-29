@@ -1,43 +1,44 @@
 use crate::{
     core,
     libs::{
-        cache, logger,
-        metrics::{self, middleware},
+        caching, logging,
+        metrics::{self, middleware::MetricsMiddleware},
         mongo,
     },
 };
-use actix_web::web;
-use std::{io, sync};
+use actix_web::{web::Data, App, HttpServer};
+use prometheus::Registry;
+use std::{io, sync::Arc};
 
 #[allow(dead_code)]
 pub struct AppState {
-    pub mongo_client: sync::Arc<mongodb::Client>,
-    pub redis_client: sync::Arc<redis::Client>,
-    pub registry: sync::Arc<prometheus::Registry>,
+    pub mongo_client: Arc<mongodb::Client>,
+    pub redis_client: Arc<redis::Client>,
+    pub registry: Arc<Registry>,
 }
 
 pub async fn run() -> io::Result<()> {
     dotenv::dotenv().ok();
 
-    logger::init_logging();
+    logging::init_logging();
 
     let mongo_client = mongo::init_mongodb().await.unwrap();
 
-    let redis_client = cache::init_redis().await.unwrap();
+    let redis_client = caching::init_redis().await.unwrap();
 
     let registry = metrics::init_metrics();
 
-    let app_state = sync::Arc::new(AppState {
-        mongo_client: sync::Arc::new(mongo_client),
-        redis_client: sync::Arc::new(redis_client),
-        registry: sync::Arc::new(registry),
+    let app_state = Arc::new(AppState {
+        mongo_client: Arc::new(mongo_client),
+        redis_client: Arc::new(redis_client),
+        registry: Arc::new(registry),
     });
 
-    actix_web::HttpServer::new(move || {
-        actix_web::App::new()
-            .app_data(web::Data::new(app_state.clone()))
-            .wrap(middleware::MetricsMiddleware)
-            .wrap(logger::request_logger())
+    HttpServer::new(move || {
+        App::new()
+            .app_data(Data::new(app_state.clone()))
+            .wrap(MetricsMiddleware)
+            .wrap(logging::request_logger())
             .configure(core::configure_routes)
     })
     .bind(("0.0.0.0", 8000))?
