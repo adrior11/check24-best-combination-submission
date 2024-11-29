@@ -1,6 +1,6 @@
 use crate::{
     app,
-    common::{constants, models::game_schema},
+    common::{constants, models::Game},
 };
 use actix_web::web;
 use mongodb::{bson, error};
@@ -11,7 +11,7 @@ pub async fn fetch_all_team_names(
 ) -> Result<mongodb::Cursor<bson::Document>, error::Error> {
     let mongo_client = &app_state.mongo_client;
 
-    let collection: mongodb::Collection<game_schema::Game> = mongo_client
+    let collection: mongodb::Collection<Game> = mongo_client
         .database(constants::DATABASE_NAME)
         .collection(constants::GAME_COLLECTION_NAME);
 

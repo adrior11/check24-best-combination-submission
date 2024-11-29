@@ -2,13 +2,13 @@ use mongodb::bson::oid;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
-#[derive(Serialize, Deserialize, Debug, Validate)]
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Validate)]
 pub struct StreamingPackage {
     #[serde(rename = "_id")]
     pub id: oid::ObjectId,
 
     #[validate(range(min = 1))]
-    pub streaming_package_id: u8,
+    pub streaming_package_id: u32,
 
     #[validate(length(min = 1))]
     pub name: String,

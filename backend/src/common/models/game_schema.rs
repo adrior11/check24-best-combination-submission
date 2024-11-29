@@ -16,7 +16,7 @@ pub struct Game {
     pub id: oid::ObjectId,
 
     #[validate(range(min = 1))]
-    pub game_id: i32,
+    pub game_id: u32,
 
     #[validate(length(min = 1))]
     pub team_away: String,
