@@ -6,6 +6,7 @@
   "scripts": {
     "frontend:start": "cd frontend && pnpm run dev",
     "frontend:build": "cd frontend && pnpm run build",
+    "frontend:format": "cd frontend && pnpm run format",
     "frontend:lint": "cd frontend && pnpm run lint",
     "backend:start": "cd backend && cargo run",
     "backend:build": "cd backend && cargo build --release",
