@@ -1,0 +1,10 @@
+# @title Get Best Combination
+POST {{API_URL}}/graphql
+Content-Type: application/json
+
+{
+  "query": "query GetBestCombination($teams: [String!]!) { bestCombination(teams: $teams) { id name streamingPackageId monthlyPriceCents monthlyPriceYearlySubscriptionInCents } }",
+  "variables": {
+    "teams": ["Italien"]
+  }
+}
