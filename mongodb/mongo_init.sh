@@ -37,6 +37,26 @@ check_and_import "best_combination" "bc_game" "/app/csv_data/bc_game.csv"
 check_and_import "best_combination" "bc_streaming_offer" "/app/csv_data/bc_streaming_offer.csv"
 check_and_import "best_combination" "bc_streaming_package" "/app/csv_data/bc_streaming_package.csv"
 
+# Create database indexes
+mongosh --quiet <<EOF
+use best_combination;
+
+function ensureIndex(collectionName, indexSpec, indexName) {
+    const collection = db.getCollection(collectionName);
+    const indexes = collection.getIndexes().map(i => i.name);
+    if (!indexes.includes(indexName)) {
+        print(\`Creating index for \${collectionName}...\`);
+        collection.createIndex(indexSpec, { name: indexName });
+    } else {
+        print(\`Index \${indexName} already exists for \${collectionName}.\`);
+    }
+}
+
+ensureIndex("bc_game", { team_home: 1, team_away: 1 }, "team_home_1_team_away_1");
+ensureIndex("bc_streaming_offer", { game_id: 1 }, "game_id_1");
+ensureIndex("bc_streaming_package", { streaming_package_id: 1 }, "streaming_package_id_1");
+EOF
+
 # Keep MongoDB running in the foreground
 tail -f /var/log/mongodb.log
 
