@@ -1,10 +1,22 @@
 use actix_web::middleware::Logger;
 use env_logger::Env;
 
+/// Initializes the global logger.
+///
+/// This function configures the logger using environment variables.
+///
+/// # Panics
+///
+/// This function will panic if it is called more than once, or if another
+/// library has already initialized a global logger. Ensure this function
+/// is only called once during applications lifetime.
 pub fn init_logging() {
     env_logger::init_from_env(Env::new().filter_or("LOG_LEVEL", "info"));
 }
 
+/// Configures the Actix Web request logger.
+///
+/// Returns a Logger middleware instance that logs request and response details.
 pub fn request_logger() -> Logger {
     Logger::new("%a \"%r\" %s %b \"%{User-Agent}i\" %T")
 }
