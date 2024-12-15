@@ -1,7 +1,10 @@
 use anyhow::Context;
+use redis::{Client, Cmd, ErrorKind, RedisError};
 
-pub async fn init_redis(url: &String) -> anyhow::Result<redis::Client> {
-    let client = redis::Client::open(url.to_owned()).context("Failed to connect to Redis")?;
+pub type RedisClient = Client;
+
+pub async fn init_redis(url: &String) -> anyhow::Result<Client> {
+    let client = Client::open(url.to_owned()).context("Failed to connect to Redis")?;
 
     validate_redis_connection(&client)
         .await
@@ -23,19 +26,13 @@ pub async fn init_redis(url: &String) -> anyhow::Result<redis::Client> {
 /// Returns a `redis::RedisError` if:
 /// - The `PING` command does not return `"PONG"`.
 /// - There is an issue sending the `PING` command or receiving the response.
-async fn validate_redis_connection(client: &redis::Client) -> redis::RedisResult<()> {
+async fn validate_redis_connection(client: &Client) -> redis::RedisResult<()> {
     let mut connection = client.get_multiplexed_tokio_connection().await?;
 
-    let response: String = redis::Cmd::new()
-        .arg("PING")
-        .query_async(&mut connection)
-        .await?;
+    let response: String = Cmd::new().arg("PING").query_async(&mut connection).await?;
 
     if response != "PONG" {
-        return Err(redis::RedisError::from((
-            redis::ErrorKind::IoError,
-            "Ping failed",
-        )));
+        return Err(RedisError::from((ErrorKind::IoError, "Ping failed")));
     }
 
     Ok(())
