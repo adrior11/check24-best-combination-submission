@@ -3,8 +3,8 @@ use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
 use validator::Validate;
 
-#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Validate)]
-pub struct StreamingPackage {
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Validate, Ord, PartialOrd)]
+pub struct StreamingPackageSchema {
     #[serde(rename = "_id")]
     pub id: ObjectId,
 
@@ -52,7 +52,7 @@ mod tests {
 
     #[test]
     fn test_streaming_package_valid() {
-        let package = StreamingPackage {
+        let package = StreamingPackageSchema {
             id: oid::ObjectId::new(),
             streaming_package_id: 1,
             name: "Premium Package".to_string(),
@@ -65,7 +65,7 @@ mod tests {
 
     #[test]
     fn test_streaming_package_invalid_streaming_package_id() {
-        let package = StreamingPackage {
+        let package = StreamingPackageSchema {
             id: oid::ObjectId::new(),
             streaming_package_id: 0,
             name: "Premium Package".to_string(),
@@ -78,7 +78,7 @@ mod tests {
 
     #[test]
     fn test_streaming_package_invalid_name_empty() {
-        let package = StreamingPackage {
+        let package = StreamingPackageSchema {
             id: oid::ObjectId::new(),
             streaming_package_id: 1,
             name: "".to_string(),
@@ -91,7 +91,7 @@ mod tests {
 
     #[test]
     fn test_streaming_package_optional_monthly_price_cents() {
-        let package = StreamingPackage {
+        let package = StreamingPackageSchema {
             id: oid::ObjectId::new(),
             streaming_package_id: 1,
             name: "Basic Package".to_string(),
@@ -114,7 +114,7 @@ mod tests {
     }
     "#;
 
-        let package: Result<StreamingPackage, _> = serde_json::from_str(json_data);
+        let package: Result<StreamingPackageSchema, _> = serde_json::from_str(json_data);
         assert!(package.is_ok());
         assert_eq!(package.unwrap().monthly_price_cents, Some(999));
     }
@@ -131,7 +131,7 @@ mod tests {
     }
     "#;
 
-        let package: Result<StreamingPackage, _> = serde_json::from_str(json_data);
+        let package: Result<StreamingPackageSchema, _> = serde_json::from_str(json_data);
         assert!(package.is_ok());
         assert_eq!(package.unwrap().monthly_price_cents, Some(499));
     }
@@ -148,7 +148,7 @@ mod tests {
     }
     "#;
 
-        let package: Result<StreamingPackage, _> = serde_json::from_str(json_data);
+        let package: Result<StreamingPackageSchema, _> = serde_json::from_str(json_data);
         assert!(package.is_ok());
         assert_eq!(package.unwrap().monthly_price_cents, None);
     }
@@ -165,7 +165,7 @@ mod tests {
     }
     "#;
 
-        let package: Result<StreamingPackage, _> = serde_json::from_str(json_data);
+        let package: Result<StreamingPackageSchema, _> = serde_json::from_str(json_data);
         assert!(package.is_ok());
         assert_eq!(package.unwrap().monthly_price_cents, None);
     }
@@ -181,7 +181,7 @@ mod tests {
     }
     "#;
 
-        let package: Result<StreamingPackage, _> = serde_json::from_str(json_data);
+        let package: Result<StreamingPackageSchema, _> = serde_json::from_str(json_data);
         assert!(package.is_ok());
         assert_eq!(package.unwrap().monthly_price_cents, None);
     }
@@ -198,7 +198,7 @@ mod tests {
     }
     "#;
 
-        let package: Result<StreamingPackage, _> = serde_json::from_str(json_data);
+        let package: Result<StreamingPackageSchema, _> = serde_json::from_str(json_data);
         assert!(package.is_err());
     }
 
@@ -214,7 +214,7 @@ mod tests {
     }
     "#;
 
-        let package: Result<StreamingPackage, _> = serde_json::from_str(json_data);
+        let package: Result<StreamingPackageSchema, _> = serde_json::from_str(json_data);
         assert!(package.is_err());
     }
 }

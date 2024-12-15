@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 #[derive(Clone, Serialize, Deserialize, Debug, Validate)]
-pub struct StreamingOffer {
+pub struct StreamingOfferSchema {
     #[serde(rename = "_id")]
     pub id: ObjectId,
 
@@ -28,7 +28,7 @@ mod tests {
 
     #[test]
     fn test_streaming_offer_valid() {
-        let offer = StreamingOffer {
+        let offer = StreamingOfferSchema {
             id: oid::ObjectId::new(),
             game_id: 1,
             streaming_package_id: 1,
@@ -41,7 +41,7 @@ mod tests {
 
     #[test]
     fn test_streaming_offer_invalid_game_id() {
-        let offer = StreamingOffer {
+        let offer = StreamingOfferSchema {
             id: oid::ObjectId::new(),
             game_id: 0,
             streaming_package_id: 1,
@@ -54,7 +54,7 @@ mod tests {
 
     #[test]
     fn test_streaming_offer_invalid_streaming_package_id() {
-        let offer = StreamingOffer {
+        let offer = StreamingOfferSchema {
             id: oid::ObjectId::new(),
             game_id: 1,
             streaming_package_id: 0,
@@ -67,7 +67,7 @@ mod tests {
 
     #[test]
     fn test_streaming_offer_invalid_live_value() {
-        let offer = StreamingOffer {
+        let offer = StreamingOfferSchema {
             id: oid::ObjectId::new(),
             game_id: 1,
             streaming_package_id: 1,
@@ -80,7 +80,7 @@ mod tests {
 
     #[test]
     fn test_streaming_offer_invalid_highlights_value() {
-        let offer = StreamingOffer {
+        let offer = StreamingOfferSchema {
             id: oid::ObjectId::new(),
             game_id: 1,
             streaming_package_id: 1,

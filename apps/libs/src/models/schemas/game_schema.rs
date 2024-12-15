@@ -11,7 +11,7 @@ static STARTS_AT: sync::Lazy<regex::Regex> =
     sync::Lazy::new(|| regex::Regex::new(STARTS_AT_REGEX).unwrap());
 
 #[derive(Clone, Serialize, Deserialize, Debug, Validate)]
-pub struct Game {
+pub struct GameSchema {
     #[serde(rename = "_id")]
     pub id: ObjectId,
 
@@ -39,7 +39,7 @@ mod tests {
 
     #[test]
     fn test_game_validation_valid() {
-        let game = Game {
+        let game = GameSchema {
             id: oid::ObjectId::new(),
             game_id: 1,
             team_away: "TEAM A".to_string(),
@@ -53,7 +53,7 @@ mod tests {
 
     #[test]
     fn test_game_validation_invalid_starts_at() {
-        let game = Game {
+        let game = GameSchema {
             id: oid::ObjectId::new(),
             game_id: 1,
             team_away: "Team A".to_string(),
@@ -67,7 +67,7 @@ mod tests {
 
     #[test]
     fn test_game_validation_invalid_starts_at_time() {
-        let game = Game {
+        let game = GameSchema {
             id: oid::ObjectId::new(),
             game_id: 1,
             team_away: "Team A".to_string(),
@@ -81,7 +81,7 @@ mod tests {
 
     #[test]
     fn test_game_validation_invalid_starts_at_month() {
-        let game = Game {
+        let game = GameSchema {
             id: oid::ObjectId::new(),
             game_id: 1,
             team_away: "Team A".to_string(),
