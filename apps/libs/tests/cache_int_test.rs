@@ -19,12 +19,10 @@ async fn cleanup(redis_client: Client, input_ids: Vec<u32>) {
 }
 
 #[tokio::test]
-async fn test_cache_integration() -> anyhow::Result<()> {
+async fn test_int_cache() -> anyhow::Result<()> {
     dotenv::dotenv().ok();
 
-    env::set_var("REDIS_URL", "redis://localhost:6379"); // TODO: use .env instead
-
-    let url = env::var("REDIS_URL").unwrap();
+    let url = env::var("REDIS_URL").expect("REDIS_URL must be set in env");
     let redis_client = caching::init_redis(&url).await.unwrap();
 
     let input_ids = vec![1, 2, 3];
