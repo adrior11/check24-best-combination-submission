@@ -1,7 +1,8 @@
 use mongodb::bson::oid::ObjectId;
-use serde::{Deserialize, Deserializer, Serialize};
-use serde_json::Value;
+use serde::{Deserialize, Serialize};
 use validator::Validate;
+
+use crate::models::util::deserialize_optional_numeric_from_string;
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Validate, Ord, PartialOrd)]
 pub struct StreamingPackageSchema {
@@ -14,34 +15,11 @@ pub struct StreamingPackageSchema {
     #[validate(length(min = 1))]
     pub name: String,
 
-    #[serde(deserialize_with = "deserialize_optional_u16_from_string", default)]
+    #[serde(deserialize_with = "deserialize_optional_numeric_from_string", default)]
     pub monthly_price_cents: Option<u16>,
 
     #[validate(range(min = 0))]
     pub monthly_price_yearly_subscription_in_cents: u16,
-}
-
-fn deserialize_optional_u16_from_string<'de, D>(deserializer: D) -> Result<Option<u16>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let value = Value::deserialize(deserializer)?;
-
-    match value {
-        Value::String(s) if !s.trim().is_empty() => {
-            s.parse::<u16>().map(Some).map_err(serde::de::Error::custom)
-        }
-        Value::String(_) => Ok(None),
-        Value::Number(num) => num
-            .as_u64()
-            .and_then(|n| u16::try_from(n).ok())
-            .map(Some)
-            .ok_or_else(|| serde::de::Error::custom("Invalid number for u16")),
-        Value::Null => Ok(None),
-        _ => Err(serde::de::Error::custom(
-            "Invalid type for monthly_price_cents",
-        )),
-    }
 }
 
 #[cfg(test)]

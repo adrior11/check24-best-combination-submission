@@ -1,5 +1,6 @@
-use crate::models::schemas::StreamingPackageSchema;
 use serde::{Deserialize, Serialize};
+
+use crate::models::schemas::StreamingPackageSchema;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct StreamingPackageDto {

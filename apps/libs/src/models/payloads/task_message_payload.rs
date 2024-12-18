@@ -1,7 +1,9 @@
+use std::collections::BTreeSet;
+
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct TaskMessagePayload {
-    pub task_id: String,
-    pub game_ids: Vec<u32>,
+    pub game_ids: BTreeSet<usize>,
+    pub limit: usize,
 }

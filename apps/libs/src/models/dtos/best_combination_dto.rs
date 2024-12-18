@@ -1,10 +1,11 @@
-use super::StreamingPackageDto;
+use async_graphql::SimpleObject;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+// TODO: It's important to track packages without monthly subscriptions
+#[derive(SimpleObject, Clone, Eq, PartialEq, Serialize, Deserialize, Debug)]
 pub struct BestCombinationDto {
-    // TODO: Combination types (min packages, min cost, etc.)
-    pub services: Vec<StreamingPackageDto>,
-    pub total_monthly_price_cents: u32,
-    pub total_monthly_price_yearly_subscription_in_cents: u32,
+    pub packages: Vec<usize>,
+    pub combined_monthly_price_cents: usize,
+    pub combined_monthly_price_yearly_subscription_in_cents: usize,
+    pub coverage: u8,
 }
