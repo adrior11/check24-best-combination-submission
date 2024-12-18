@@ -1,6 +1,7 @@
 // NOTE: Registry is not needed
-use super::counters;
 use prometheus::{Encoder, Registry, TextEncoder};
+
+use super::counters;
 
 /// Registers all defined Prometheus metrics with the provided registry.
 ///

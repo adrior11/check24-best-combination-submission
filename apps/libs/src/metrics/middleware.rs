@@ -1,16 +1,17 @@
-// TODO: Test the metric utilization on micro services
-use super::counters::{ERROR_COUNT, REQUEST_COUNT, REQUEST_DURATION};
-use actix_web::{
-    dev::{Service, ServiceRequest, ServiceResponse, Transform},
-    http::StatusCode,
-    Error,
-};
 use std::{
     future::{self, Future, Ready},
     pin::Pin,
     task::{Context, Poll},
     time::Instant,
 };
+
+use actix_web::{
+    dev::{Service, ServiceRequest, ServiceResponse, Transform},
+    http::StatusCode,
+    Error,
+};
+
+use super::counters::{ERROR_COUNT, REQUEST_COUNT, REQUEST_DURATION};
 
 /// Middleware for collecting Prometheus metrics on HTTP requests.
 ///
@@ -58,7 +59,7 @@ where
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
         let method = req.method().to_string();
-        let path = req.path().to_string(); // TODO: Consider dynamic paths (redundant with GraphQL)
+        let path = req.path().to_string();
 
         log::debug!("Incoming request: method={}, path={}", method, path);
 
