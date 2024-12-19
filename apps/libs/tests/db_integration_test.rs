@@ -1,3 +1,5 @@
+use std::{collections::BTreeSet, env};
+
 use libs::{
     constants::{
         DATABASE_NAME, GAME_COLLECTION_NAME, STREAMING_OFFER_COLLECTION_NAME,
@@ -8,7 +10,6 @@ use libs::{
         DocumentDatabaseConnector, MongoClient,
     },
 };
-use std::{collections::BTreeSet, env};
 
 #[tokio::test]
 async fn test_int_fetch_games() {
@@ -101,29 +102,27 @@ async fn test_int_fetch_packages() {
 #[tokio::test]
 async fn test_int_preprocess_subsets() {
     dotenv::dotenv().ok();
+
     let uri = env::var("MONGODB_URI").expect("MONGODB_URI must be set in env");
     let mongo_client = MongoClient::init(&uri, DATABASE_NAME).await;
-
     let package_dao =
         StreamingPackageDao::new(mongo_client.get_collection(STREAMING_PACKAGE_COLLECTION_NAME));
 
-    let game_ids = vec![
+    let game_ids = BTreeSet::from([
         52, 69, 76, 79, 103, 89, 113, 121, 125, 139, 146, 151, 161, 171, 186, 193, 196, 212, 214,
         219, 225, 240, 251, 257, 261, 272, 284, 293, 307, 320, 302, 325, 337, 349, 356, 5305, 5320,
         5325, 5330, 5341, 5349, 5364, 5367, 5383, 5386, 5394, 5404, 5416, 5436, 5440, 5422, 5449,
         5459, 5467, 5474, 5483, 5492, 5501, 5511, 5525, 5529, 5541, 5548, 5557, 5566, 5584, 5573,
         5593, 7354, 7890, 8440, 8466, 8486, 8514, 8503, 8533, 8568, 8560, 8845,
-    ];
-    let subsets = package_dao.preprocess_subsets(&game_ids).await.unwrap();
-    let game_ids_set: BTreeSet<usize> = game_ids.into_iter().map(|x| x as usize).collect();
+    ]);
+    let subsets_result = package_dao.preprocess_subsets(&game_ids).await;
+    assert!(subsets_result.is_ok());
 
-    assert!(!subsets.is_empty(), "No offers fetched");
+    let subsets = subsets_result.unwrap();
+    assert!(!subsets.is_empty());
+
     for subset in &subsets {
-        let intersection: Vec<_> = subset
-            .elements
-            .intersection(&game_ids_set)
-            .cloned()
-            .collect();
+        let intersection: Vec<_> = subset.elements.intersection(&game_ids).cloned().collect();
         assert!(!intersection.is_empty());
     }
 }
