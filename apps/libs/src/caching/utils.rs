@@ -1,88 +1,132 @@
+use std::hash::{Hash, Hasher};
+
 use anyhow::Context;
 use redis::AsyncCommands;
 use serde::{Deserialize, Serialize};
-use std::hash::{Hash, Hasher};
 
-/// Represents a cached entry containing input and corresponding output identifiers.
+/// Time-To-Live (TTL) for cache entries in seconds.
+/// Preset to 1 Week: 7 days * 24 hours * 60 minutes * 60 seconds
+const CACHE_TTL: u64 = 7 * 24 * 60 * 60;
+
+/// A generic cache entry structure for storing key-value pairs in Redis.
 ///
-/// This struct is serialized and stored in Redis to cache the results of computations for API calls.
-/// It includes:
-/// - `input_ids`: A vector of input identifiers.
-/// - `output_ids`: A vector of vectors containing output identifiers corresponding to each input.
+/// # Type Parameters
+///
+/// * `T` - The type of the value to be cached. This must implement `Serialize` and `Deserialize`.
 #[derive(Serialize, Deserialize, Debug)]
-pub struct CacheEntry {
-    pub input_ids: Vec<u32>,
-    pub output_ids: Vec<Vec<u32>>,
+pub struct CacheEntry<T> {
+    pub key: Vec<usize>,
+    pub value: T,
 }
 
-/// Caches the provided input and output identifiers in Redis.
+/// Caches a entry in Redis.
 ///
-/// This asynchronous function serializes the `CacheEntry` and stores it in Redis using a key derived from the input identifiers.
+/// This function stores a key-value pair in Redis with an preset TTL of 1 week.
+/// The key is generated from the provided identifiers, and the value is serialized into JSON format.
 ///
 /// # Arguments
 ///
 /// * `redis_client` - A reference to the Redis client used to connect to the Redis server.
-/// * `input_ids` - A vector of input identifiers to be cached.
-/// * `output_ids` - A vector of vectors containing output identifiers corresponding to each input.
+/// * `key` - A vector of unique identifiers used to generate the cache key.
+/// * `value` - The value to cache. This can be any type that implements `Serialize`.
 ///
 /// # Errors
 ///
 /// Returns an `anyhow::Error` if:
-/// - There is an issue obtaining a connection to Redis.
-/// - Serialization of the `CacheEntry` fails.
-/// - Storing the data in Redis fails.
-pub async fn cache_result(
+/// - A connection to Redis cannot be established.
+/// - The value cannot be serialized into JSON.
+/// - The Redis `SET` operation fails.
+///
+/// # Examples
+///
+/// ```no_run
+/// # use anyhow;
+/// use libs::caching::{cache_entry, CacheEntry, init_redis, RedisClient};
+///
+/// # #[tokio::main]
+/// # async fn main() -> anyhow::Result<()> {
+/// let redis_url = "redis://localhost:6379".to_string();
+/// let redis_client: RedisClient = init_redis(&redis_url).await?;
+/// let cache_key = vec![1, 2, 3];
+/// let cache_value = "Hello World!";
+///
+/// cache_entry(&redis_client, cache_key, cache_value).await?;
+/// # Ok(())
+/// # }
+pub async fn cache_entry<T>(
     redis_client: &redis::Client,
-    input_ids: Vec<u32>,
-    output_ids: Vec<Vec<u32>>,
-) -> anyhow::Result<()> {
+    key: Vec<usize>,
+    value: T,
+) -> anyhow::Result<()>
+where
+    T: Serialize,
+{
     let mut connection = redis_client.get_multiplexed_tokio_connection().await?;
 
-    let cache_key = format!("cache:{}", hash_input(&input_ids));
+    let cache_key = format!("cache:{}", hash_input(&key));
+    let cache_value = serde_json::to_string(&CacheEntry { key, value })
+        .context("Failed to serialize cache value")?;
 
-    let cache_value = serde_json::to_string(&CacheEntry {
-        input_ids,
-        output_ids,
-    })?;
-
-    let _: () = connection.set(cache_key, cache_value).await?;
-
+    let _: () = connection.set_ex(cache_key, cache_value, CACHE_TTL).await?;
     Ok(())
 }
 
-/// Retrieves a cached `CacheEntry` from Redis based on the provided input identifiers.
+/// Retrieves a cached entry from Redis.
 ///
-/// This asynchronous function fetches the cached data from Redis, deserializes it, and returns the `CacheEntry` if found.
+/// This function fetches a cached key-value pair from Redis, deserializes it,
+/// and returns the result if found.
 ///
 /// # Arguments
 ///
 /// * `redis_client` - A reference to the Redis client used to connect to the Redis server.
-/// * `input_ids` - A slice of input identifiers to retrieve the corresponding cached entry.
+/// * `key` - A slice of unique identifiers to generate the cache key.
 ///
 /// # Returns
 ///
-/// * `Ok(Some(CacheEntry))` if a cached entry is found and successfully deserialized.
-/// * `Ok(None)` if no cached entry exists for the provided input identifiers.
+/// * `Ok(Some(CacheEntry<T>))` if a cached entry is found and successfully deserialized.
+/// * `Ok(None)` if no cached entry exists for the provided key.
 /// * `Err(anyhow::Error)` if there is an issue retrieving or deserializing the cached data.
 ///
 /// # Errors
 ///
 /// Returns an `anyhow::Error` if:
-/// - There is an issue obtaining a connection to Redis.
-/// - Deserialization of the cached data fails.
-pub async fn get_cached_result(
+/// - A connection to Redis cannot be established.
+/// - The value cannot be deserialized from JSON.
+///
+/// # Examples
+///
+/// ```no_run
+/// # use anyhow;
+/// use libs::caching::{get_cached_entry, CacheEntry, init_redis, RedisClient};
+///
+/// # #[tokio::main]
+/// # async fn main() -> anyhow::Result<()> {
+/// let redis_url = "redis://localhost:6379".to_string();
+/// let redis_client: RedisClient = init_redis(&redis_url).await?;
+/// let cache_key = vec![1, 2, 3];
+///
+/// if let Some(cached) = get_cached_entry::<String>(&redis_client, &cache_key).await? {
+///     println!("Cached value: {:?}", cached.value);
+/// } else {
+///     println!("No cache entry found.");
+/// }
+/// # Ok(())
+/// # }
+pub async fn get_cached_entry<T>(
     redis_client: &redis::Client,
-    input_ids: &[u32],
-) -> anyhow::Result<Option<CacheEntry>> {
+    key: &[usize],
+) -> anyhow::Result<Option<CacheEntry<T>>>
+where
+    T: for<'de> Deserialize<'de>,
+{
     let mut connection = redis_client.get_multiplexed_tokio_connection().await?;
 
-    let cache_key = format!("cache:{}", hash_input(input_ids));
-
+    let cache_key = format!("cache:{}", hash_input(key));
     let cache_value: Option<String> = connection.get(cache_key).await.ok();
 
     if let Some(value) = cache_value {
-        let entry: CacheEntry =
-            serde_json::from_str(&value).context("Failed to parse cache entry")?;
+        let entry: CacheEntry<T> =
+            serde_json::from_str(&value).context("Failed to deserialize cache value")?;
         Ok(Some(entry))
     } else {
         Ok(None)
@@ -101,8 +145,10 @@ pub async fn get_cached_result(
 ///
 /// A `String` representing the hash of the input identifiers.
 ///
-fn hash_input(input_ids: &[u32]) -> String {
+fn hash_input(input_ids: &[usize]) -> String {
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    input_ids.iter().for_each(|id| id.hash(&mut hasher));
+    let mut sorted_ids = input_ids.to_vec();
+    sorted_ids.sort(); // Sort to ensure order independence
+    sorted_ids.iter().for_each(|id| id.hash(&mut hasher));
     hasher.finish().to_string()
 }

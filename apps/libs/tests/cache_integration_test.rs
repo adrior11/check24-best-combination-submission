@@ -43,11 +43,11 @@ async fn test_int_cache() -> anyhow::Result<()> {
         },
     ];
 
-    caching::cache_result(&redis_client, key.clone(), value.clone())
+    caching::cache_entry(&redis_client, key.clone(), value.clone())
         .await
         .unwrap();
 
-    let retrieved_entry = caching::get_cached_result(&redis_client, &key)
+    let retrieved_entry = caching::get_cached_entry::<Vec<BestCombinationDto>>(&redis_client, &key)
         .await
         .unwrap();
 
