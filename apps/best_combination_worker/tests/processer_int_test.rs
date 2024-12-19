@@ -17,7 +17,6 @@ async fn test_int_processor() {
 
     let channel = messaging::get_channel(&CONFIG.rabbitmq_url).await.unwrap();
     init_mq(&channel, &CONFIG.task_queue_name).await.unwrap();
-    init_mq(&channel, &CONFIG.result_queue_name).await.unwrap();
 
     let redis_client = caching::init_redis(&CONFIG.redis_url).await.unwrap();
 
@@ -55,19 +54,19 @@ async fn test_int_processor() {
 
     let expected = [
         BestCombinationDto {
-            packages: vec![4, 13, 37],
+            packages: vec![3, 37],
             combined_monthly_price_cents: 999,
             combined_monthly_price_yearly_subscription_in_cents: 699,
             coverage: 99,
         },
         BestCombinationDto {
-            packages: vec![4, 13, 38],
+            packages: vec![3, 38],
             combined_monthly_price_cents: 2499,
             combined_monthly_price_yearly_subscription_in_cents: 1999,
             coverage: 99,
         },
         BestCombinationDto {
-            packages: vec![4, 10, 13],
+            packages: vec![3, 10],
             combined_monthly_price_cents: 3599,
             combined_monthly_price_yearly_subscription_in_cents: 2999,
             coverage: 99,

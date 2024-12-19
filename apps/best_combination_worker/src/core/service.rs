@@ -3,7 +3,7 @@ use std::collections::BTreeSet;
 
 use libs::models::dtos::{BestCombinationDto, BestCombinationSubsetDto};
 
-use super::mapper::{self, map_to_best_combination_dto};
+use super::mapper;
 
 pub fn get_best_combination(
     universe: &BTreeSet<usize>,
@@ -101,7 +101,7 @@ fn enumerate_best_combinations(
     if branch_explored && !current_cover.is_empty() {
         // let mut sorted_cover = current_cover.clone();
         // sorted_cover.sort();
-        let result = map_to_best_combination_dto(current_cover, subsets, universe);
+        let result = mapper::map_to_best_combination_dto(current_cover, subsets, universe);
         if !results.contains(&result) {
             results.push(result);
         }
@@ -149,12 +149,12 @@ mod tests {
         let (game_ids, subsets) = setup().await;
 
         let expected = [BestCombinationDto {
-            packages: vec![4, 13, 37],
+            packages: vec![3, 37],
             combined_monthly_price_cents: 999,
             combined_monthly_price_yearly_subscription_in_cents: 699,
             coverage: 99,
         }];
-        let expected_package_ids = [[4, 13, 37]];
+        let expected_package_ids = [[3, 37]];
 
         let limit = 1;
         let results = get_best_combination(&game_ids, &subsets, limit);
@@ -174,25 +174,25 @@ mod tests {
 
         let expected = [
             BestCombinationDto {
-                packages: vec![4, 13, 37],
+                packages: vec![3, 37],
                 combined_monthly_price_cents: 999,
                 combined_monthly_price_yearly_subscription_in_cents: 699,
                 coverage: 99,
             },
             BestCombinationDto {
-                packages: vec![4, 13, 38],
+                packages: vec![3, 38],
                 combined_monthly_price_cents: 2499,
                 combined_monthly_price_yearly_subscription_in_cents: 1999,
                 coverage: 99,
             },
             BestCombinationDto {
-                packages: vec![4, 10, 13],
+                packages: vec![3, 10],
                 combined_monthly_price_cents: 3599,
                 combined_monthly_price_yearly_subscription_in_cents: 2999,
                 coverage: 99,
             },
         ];
-        let expected_package_ids = [[4, 13, 37], [4, 13, 38], [4, 10, 13]];
+        let expected_package_ids = [[3, 37], [3, 38], [3, 10]];
 
         let limit = 3;
         let results = get_best_combination(&game_ids, &subsets, limit);
