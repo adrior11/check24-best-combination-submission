@@ -31,8 +31,8 @@ fn enumerate_recursive_set_cover(
         })
         .collect();
 
-    // Check if all elements are covered
-    if covered == *universe {
+    // Check if all elements are covered or if a leaf node has been reached
+    if covered == *universe || current_cover.len() >= subsets.len() {
         let mut sorted_cover = current_cover.clone();
         sorted_cover.sort();
         if !results.contains(&sorted_cover) {
@@ -44,17 +44,17 @@ fn enumerate_recursive_set_cover(
         return false; // Continue searching if limit not reached
     }
 
-    // Prune branches that are too long
-    if current_cover.len() >= subsets.len() {
-        return false;
-    }
-
     // Calculate cost-benefit ratio for each subset based on uncovered elements
     let mut ratios: Vec<(usize, f64)> = subsets
         .iter()
         .enumerate()
         .filter_map(|(i, s)| {
-            let uncovered_elements = s.elements.difference(&covered).count();
+            let uncovered_elements = s
+                .elements
+                .intersection(universe)
+                .filter(|e| !covered.contains(e))
+                .count();
+
             if uncovered_elements > 0 {
                 Some((i, s.cost as f64 / uncovered_elements as f64))
             } else {
@@ -112,9 +112,25 @@ mod tests {
     }
 
     #[test]
+    fn test_no_subsets() {
+        let universe = BTreeSet::from([1, 2]);
+        let subsets = vec![];
+        let limit = 5;
+
+        let expected_cover: &[Vec<usize>] = &[vec![]];
+        let mut results = recursive_set_covers(&universe, &subsets, limit);
+        sort_results(&mut results);
+        assert_eq!(results, expected_cover);
+    }
+
+    #[test]
     fn test_empty_universe() {
         let universe = BTreeSet::new();
-        let subsets = vec![];
+        let subsets = vec![Subset {
+            id: 1,
+            elements: BTreeSet::from([1, 2, 3]),
+            cost: 10,
+        }];
         let limit = 2;
 
         let expected_cover: &[Vec<usize>] = &[vec![]];
@@ -124,12 +140,12 @@ mod tests {
     }
 
     #[test]
-    fn test_no_subsets() {
-        let universe = BTreeSet::from([1, 2]);
+    fn test_empty_universe_no_subsets() {
+        let universe = BTreeSet::new();
         let subsets = vec![];
         let limit = 5;
 
-        let expected_cover: &[Vec<usize>] = &[];
+        let expected_cover: &[Vec<usize>] = &[vec![]];
         let mut results = recursive_set_covers(&universe, &subsets, limit);
         sort_results(&mut results);
         assert_eq!(results, expected_cover);
@@ -169,7 +185,7 @@ mod tests {
         ];
         let limit = 3;
 
-        let expected_cover: &[Vec<usize>] = &[];
+        let expected_cover = &[vec![1, 2]];
         let mut results = recursive_set_covers(&universe, &subsets, limit);
         sort_results(&mut results);
         assert_eq!(results, expected_cover);
