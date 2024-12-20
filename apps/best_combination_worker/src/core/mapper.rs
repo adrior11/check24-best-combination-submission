@@ -11,9 +11,12 @@ pub fn map_to_best_combination_dto(
     let mut combined_monthly_price_cents = 0;
     let mut combined_monthly_price_yearly_subscription_in_cents = 0;
     let mut covered: BTreeSet<usize> = BTreeSet::new();
+    let mut processed_ids: BTreeSet<usize> = BTreeSet::new();
 
     for subset in subsets {
-        if current_cover.contains(&subset.streaming_package_id) {
+        let id = subset.streaming_package_id;
+        if current_cover.contains(&id) && !processed_ids.contains(&id) {
+            processed_ids.insert(id);
             packages.push(subset.streaming_package_id);
             combined_monthly_price_cents += subset.monthly_price_cents.unwrap_or(0);
             combined_monthly_price_yearly_subscription_in_cents +=
@@ -71,5 +74,40 @@ mod tests {
         };
 
         assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_mapper_with_duplicate_ids() {
+        let current_cover = [1];
+        let subsets = vec![
+            BestCombinationSubsetDto {
+                streaming_package_id: 1,
+                elements: BTreeSet::from([1]),
+                monthly_price_cents: Some(10),
+                monthly_price_yearly_subscription_in_cents: 10,
+            },
+            BestCombinationSubsetDto {
+                streaming_package_id: 1,
+                elements: BTreeSet::from([1]),
+                monthly_price_cents: Some(10),
+                monthly_price_yearly_subscription_in_cents: 10,
+            },
+        ];
+        let universe = BTreeSet::from([1]);
+
+        let result = map_to_best_combination_dto(&current_cover, &subsets, &universe);
+
+        // Duplicate packages do not increase the number of packages or sums.
+        let expected = BestCombinationDto {
+            packages: vec![1],
+            combined_monthly_price_cents: 10,
+            combined_monthly_price_yearly_subscription_in_cents: 10,
+            coverage: 100,
+        };
+
+        assert_eq!(
+            result, expected,
+            "Mapper should handle duplicate package IDs correctly"
+        );
     }
 }

@@ -77,7 +77,7 @@ impl Processor {
         let subsets = self.package_dao.preprocess_subsets(&msg.game_ids).await?;
 
         log::info!("Performing best combination set cover algorithm...");
-        let best_combinations = service::get_best_combination(&msg.game_ids, &subsets, msg.limit);
+        let best_combinations = service::get_best_combinations(&msg.game_ids, &subsets, msg.limit);
 
         let cache_key: Vec<usize> = msg.game_ids.into_iter().collect();
         caching::cache_entry(
