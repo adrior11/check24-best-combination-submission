@@ -8,27 +8,69 @@ use serde::{Deserialize, Serialize};
 /// Preset to 1 Week: 7 days * 24 hours * 60 minutes * 60 seconds
 const CACHE_TTL: u64 = 7 * 24 * 60 * 60;
 
+/// Represents the value stored in the cache.
+///
+/// This enum enables distinguishing between values that are still being
+/// computed and values that are fully computed and ready to be served.
+///
+/// # Variants
+///
+/// * `Processing` - Indicates that the requested data is not yet available
+///    and is currently being computed or fetched in the background.
+///    Clients may need to try again later.
+///
+/// * `Data(T)` - Holds the actual cached value of type `T`.
+///
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub enum CacheValue<T> {
+    Processing,
+    Data(T),
+}
+
 /// A generic cache entry structure for storing key-value pairs in Redis.
+///
+/// # Overview
+///
+/// The `CacheEntry` pairs a unique key with a `CacheValue`, which can either be `Processing` or `Data(T)`.
+/// This allows the cache to clearly represent both pending and ready states.
 ///
 /// # Type Parameters
 ///
-/// * `T` - The type of the value to be cached. This must implement `Serialize` and `Deserialize`.
+/// * `T` - The type of the value to be cached. This must implement
+///   `Serialize` and `Deserialize`.
+///
+/// # Example
+///
+/// ```
+/// use libs::caching::{CacheEntry, CacheValue};
+///
+/// let entry_in_progress: CacheEntry<String> = CacheEntry {
+///     key: vec![1, 2, 3],
+///     value: CacheValue::Processing
+/// };
+///
+/// let entry_ready: CacheEntry<String> = CacheEntry {
+///     key: vec![1, 2, 3],
+///     value: CacheValue::Data("Cached result".to_string())
+/// };
+/// ```
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CacheEntry<T> {
     pub key: Vec<usize>,
-    pub value: T,
+    pub value: CacheValue<T>,
 }
 
 /// Caches a entry in Redis.
 ///
 /// This function stores a key-value pair in Redis with an preset TTL of 1 week.
-/// The key is generated from the provided identifiers, and the value is serialized into JSON format.
+/// The value stored can be either `CacheValue::Processing` to indicate a
+/// pending computation, or `CacheValue::Data(T)` to store the actual data.
 ///
 /// # Arguments
 ///
 /// * `redis_client` - A reference to the Redis client used to connect to the Redis server.
 /// * `key` - A vector of unique identifiers used to generate the cache key.
-/// * `value` - The value to cache. This can be any type that implements `Serialize`.
+/// * `value` - The `CacheValue` to store.
 ///
 /// # Errors
 ///
@@ -41,22 +83,21 @@ pub struct CacheEntry<T> {
 ///
 /// ```no_run
 /// # use anyhow;
-/// use libs::caching::{cache_entry, CacheEntry, init_redis, RedisClient};
+/// use libs::caching::{cache_entry, CacheEntry, CacheValue, init_redis, RedisClient};
 ///
 /// # #[tokio::main]
 /// # async fn main() -> anyhow::Result<()> {
 /// let redis_url = "redis://localhost:6379".to_string();
 /// let redis_client: RedisClient = init_redis(&redis_url).await?;
 /// let cache_key = vec![1, 2, 3];
-/// let cache_value = "Hello World!";
 ///
-/// cache_entry(&redis_client, cache_key, cache_value).await?;
+/// cache_entry(&redis_client, cache_key, CacheValue::Data("Hello World!")).await?;
 /// # Ok(())
 /// # }
 pub async fn cache_entry<T>(
     redis_client: &redis::Client,
     key: Vec<usize>,
-    value: T,
+    value: CacheValue<T>,
 ) -> anyhow::Result<()>
 where
     T: Serialize,

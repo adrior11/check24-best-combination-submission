@@ -2,9 +2,10 @@ use std::sync::Arc;
 
 use async_graphql::*;
 use libs::{
-    caching::{self, RedisClient},
+    caching::{self, CacheValue, RedisClient},
     db::dao::GameDao,
     messaging::{self, MqChannel},
+    models::dtos::BestCombinationDto,
 };
 
 use super::{
@@ -30,12 +31,36 @@ impl QueryRoot {
         let mq_channel = ctx.data::<Arc<MqChannel>>()?;
 
         let game_ids = game_dao.fetch_game_ids(&teams).await?; // NOTE: Can data-fetch do this?
-        if let Some(data) = caching::get_cached_result(redis_client, &game_ids).await? {
-            return Ok(FetchResult {
-                status: FetchStatus::Ready,
-                data: Some(data.value),
-            });
+        if game_ids.is_empty() {
+            return Err(Error::new(format!(
+                "Unknown input: no matching games found for teams {:?}",
+                teams
+            )));
         }
+
+        if let Some(cached_entry) = caching::get_cached_entry(redis_client, &game_ids).await? {
+            match cached_entry.value {
+                CacheValue::Processing => {
+                    return Ok(FetchResult {
+                        status: FetchStatus::Processing,
+                        data: None,
+                    })
+                }
+                CacheValue::Data(data) => {
+                    return Ok(FetchResult {
+                        status: FetchStatus::Ready,
+                        data: Some(data),
+                    })
+                }
+            }
+        }
+
+        caching::cache_entry(
+            redis_client,
+            game_ids.clone(),
+            CacheValue::<Vec<BestCombinationDto>>::Processing,
+        )
+        .await?;
 
         let payload = mapper::map_task_message_payload(game_ids, opts);
         let job_enqueued = messaging::enqueue_job(mq_channel, &CONFIG.task_queue_name, &payload)

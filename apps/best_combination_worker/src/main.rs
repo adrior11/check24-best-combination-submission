@@ -33,8 +33,6 @@ async fn main() -> anyhow::Result<()> {
     signal::ctrl_c().await?;
     log::info!("Termination signal received. Shutting down...");
 
-    // TODO: Gracefull shutdown
-
     processor_handle.abort();
     Ok(())
 }

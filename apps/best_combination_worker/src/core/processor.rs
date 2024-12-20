@@ -4,7 +4,7 @@ use futures::stream::StreamExt;
 use lapin::{message::Delivery, options::BasicAckOptions, Channel, Consumer};
 
 use libs::{
-    caching::{self, RedisClient},
+    caching::{self, CacheValue, RedisClient},
     db::dao::StreamingPackageDao,
     messaging,
     models::payloads::TaskMessagePayload,
@@ -75,14 +75,23 @@ impl Processor {
     async fn process_message(&self, channel: &Channel, delivery: &Delivery) -> anyhow::Result<()> {
         let msg = self.parse_message(&delivery.data)?;
         let subsets = self.package_dao.preprocess_subsets(&msg.game_ids).await?;
+
+        log::info!("Performing best combination set cover algorithm...");
         let best_combinations = service::get_best_combination(&msg.game_ids, &subsets, msg.limit);
 
         let cache_key: Vec<usize> = msg.game_ids.into_iter().collect();
-        caching::cache_result(&self.redis_client, cache_key, best_combinations).await?;
+        caching::cache_entry(
+            &self.redis_client,
+            cache_key,
+            CacheValue::Data(best_combinations),
+        )
+        .await?;
 
         channel
             .basic_ack(delivery.delivery_tag, BasicAckOptions::default())
             .await?;
+
+        log::info!("Finished processing message");
 
         Ok(())
     }

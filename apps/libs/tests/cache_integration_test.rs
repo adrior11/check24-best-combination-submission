@@ -5,7 +5,10 @@ use std::{
 
 use redis::{AsyncCommands, Client};
 
-use libs::{caching, models::dtos::BestCombinationDto};
+use libs::{
+    caching::{self, CacheValue},
+    models::dtos::BestCombinationDto,
+};
 
 async fn cleanup(redis_client: Client, input_ids: Vec<usize>) {
     let mut connection = redis_client
@@ -43,7 +46,7 @@ async fn test_int_cache() -> anyhow::Result<()> {
         },
     ];
 
-    caching::cache_entry(&redis_client, key.clone(), value.clone())
+    caching::cache_entry(&redis_client, key.clone(), CacheValue::Data(value.clone()))
         .await
         .unwrap();
 
@@ -54,7 +57,7 @@ async fn test_int_cache() -> anyhow::Result<()> {
     assert!(retrieved_entry.is_some());
     let entry = retrieved_entry.unwrap();
     assert_eq!(entry.key, key);
-    assert_eq!(entry.value, value);
+    assert_eq!(entry.value, CacheValue::Data(value));
 
     cleanup(redis_client, key).await;
 
