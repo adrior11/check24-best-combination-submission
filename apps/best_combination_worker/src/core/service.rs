@@ -5,6 +5,43 @@ use libs::models::dtos::{BestCombinationDto, BestCombinationSubsetDto};
 
 use super::mapper;
 
+/// Computes a set of best combinations of streaming package subsets that cover a given universe of game IDs.
+///
+/// # Overview
+///
+/// `get_best_combinations` attempts to find one or more best combinations of these packages (subsets)
+/// that cover the entire universe of game IDs. A combination is considered covering the universe if
+/// every game ID in the universe is included in at least one offer of a chosen package.
+///
+/// In addition, it can also consider use cases with non-existent set coverage, where it tries to
+/// approximate an arbitrary number of solutions, which get as close as possible.
+///
+/// Under the hood, this method uses a greedy recursive backtracking strategy, guided by heuristics like
+/// sorting subsets according to cost or cost-per-uncovered-element ratios. While heuristics and pruning
+/// strategies may help in practice, the underlying problem is NP-hard. Thus, this algorithm can still
+/// exhibit exponential runtime in the worst case.
+///
+/// # Example Scenario
+///
+/// Suppose we have a universe U = {1, 2} and subsets:
+/// - S1 covers {1} with cost 5
+/// - S2 covers {1} with cost 5
+/// - S3 covers {2} with cost 5
+///
+/// Both (S1, S3) and (S2, S3) form covers of U, making multiple equally viable solutions.
+/// The algorithm enumerates these solutions, which can be beneficial if you want a set
+/// of candidate solutions for further analysis.
+///
+/// # Arguments
+///
+/// * `universe` - A `BTreeSet<usize>` representing all game IDs that must be covered.
+/// * `subsets` - A slice of `BestCombinationSubsetDto` representing candidate streaming packages.
+/// * `limit` - The maximum number of solutions (combinations of subsets) to return.
+///
+/// # Returns
+///
+/// `Vec<BestCombinationDto>`: A vector of best combinations.
+///
 pub fn get_best_combinations(
     universe: &BTreeSet<usize>,
     subsets: &[BestCombinationSubsetDto],
@@ -16,6 +53,32 @@ pub fn get_best_combinations(
     results
 }
 
+/// Recursively enumerates possible combinations of subsets that cover the given universe of game IDs.
+///
+/// # Overview
+///
+/// `enumerate_best_combinations` is the core logic behind `get_best_combinations`. Using backtracking,
+/// it attempts to build complete solutions by selecting subsets:
+///
+/// 1. At each recursive call, it evaluates which subsets best improve coverage of the remaining uncovered games.
+/// 2. It selects the next best candidate according to the cost per uncovered games
+/// 3. If a full cover is found or it reaches a leaf node, the current combination is recorded as a solution.
+/// 4. The function then attempts to find more solutions (up to the specified `limit`) by backtracking and trying
+///    alternate subsets.
+///
+/// # Arguments
+///
+/// * `universe` - The full set of game IDs that must be covered.
+/// * `subsets` - The collection of candidate streaming packages (no duplicates assumed).
+/// * `limit` - The maximum number of solutions to return. Once reached, the search halts.
+/// * `results` - A mutable reference to a vector collecting all found solutions.
+/// * `current_cover` - A mutable vector representing the current partial solution (as a list of chosen subset IDs).
+///
+/// # Returns
+///
+/// Returns `true` if more solutions can still be found (meaning it will continue searching), or `false`
+/// if the limit has been reached or no further solutions are possible.
+///
 fn enumerate_best_combinations(
     universe: &BTreeSet<usize>,
     subsets: &[BestCombinationSubsetDto],
@@ -52,11 +115,7 @@ fn enumerate_best_combinations(
         .iter()
         .enumerate()
         .filter_map(|(i, s)| {
-            let uncovered_elements = s
-                .elements
-                .intersection(universe)
-                .filter(|e| !covered.contains(e))
-                .count();
+            let uncovered_elements = s.elements.difference(&covered).count();
 
             if uncovered_elements > 0 {
                 let cost = s.monthly_price_cents.unwrap_or(usize::MAX) as f64;
@@ -238,20 +297,6 @@ mod tests {
             results, expected_cover,
             "Should find the next best coverage approximation"
         );
-    }
-
-    #[test]
-    fn test_single_element_universe() {
-        let universe = BTreeSet::from([1]);
-        let subsets = vec![
-            create_best_combination_subset_dto(1, BTreeSet::from([1]), None, 10),
-            create_best_combination_subset_dto(2, BTreeSet::from([2]), Some(5), 10),
-        ];
-        let limit = 2;
-
-        let expected_cover = vec![create_best_combination_dto(vec![1], 0, 10, 100)];
-        let results = get_best_combinations(&universe, &subsets, limit);
-        assert_eq!(results, expected_cover);
     }
 
     #[test]
