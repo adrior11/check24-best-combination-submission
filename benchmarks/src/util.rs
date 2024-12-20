@@ -1,5 +1,6 @@
-use serde::Deserialize;
 use std::{collections::BTreeSet, fs::File, io::BufReader};
+
+use serde::Deserialize;
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct RawSubset {

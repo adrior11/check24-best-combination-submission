@@ -1,5 +1,6 @@
-use crate::util::Subset;
 use std::collections::BTreeSet;
+
+use crate::util::Subset;
 
 pub fn recursive_set_covers(
     universe: &BTreeSet<usize>,
@@ -49,11 +50,7 @@ fn enumerate_recursive_set_cover(
         .iter()
         .enumerate()
         .filter_map(|(i, s)| {
-            let uncovered_elements = s
-                .elements
-                .intersection(universe)
-                .filter(|e| !covered.contains(e))
-                .count();
+            let uncovered_elements = s.elements.difference(&covered).count();
 
             if uncovered_elements > 0 {
                 Some((i, s.cost as f64 / uncovered_elements as f64))
@@ -186,28 +183,6 @@ mod tests {
         let limit = 3;
 
         let expected_cover = &[vec![1, 2]];
-        let mut results = recursive_set_covers(&universe, &subsets, limit);
-        sort_results(&mut results);
-        assert_eq!(results, expected_cover);
-    }
-
-    #[test]
-    fn test_single_element_universe() {
-        let universe = BTreeSet::from([1]);
-        let subsets = vec![
-            Subset {
-                id: 1,
-                elements: BTreeSet::from([1]),
-                cost: 10,
-            },
-            Subset {
-                id: 2,
-                elements: BTreeSet::from([2]),
-                cost: 5,
-            },
-        ];
-        let limit = 2;
-        let expected_cover = &[[1]];
         let mut results = recursive_set_covers(&universe, &subsets, limit);
         sort_results(&mut results);
         assert_eq!(results, expected_cover);

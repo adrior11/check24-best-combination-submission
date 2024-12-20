@@ -1,6 +1,7 @@
-use crate::util::Subset;
 use core::f64;
 use std::collections::{BTreeSet, HashSet};
+
+use crate::util::Subset;
 
 pub fn iterative_set_cover(universe: &BTreeSet<usize>, subsets: &[Subset]) -> HashSet<usize> {
     let mut uncovered: BTreeSet<usize> = universe.iter().cloned().collect();
