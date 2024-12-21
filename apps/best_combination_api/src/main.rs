@@ -12,7 +12,7 @@ use libs::{
     constants::{DATABASE_NAME, GAME_COLLECTION_NAME},
     db::{dao::GameDao, DocumentDatabaseConnector, MongoClient},
     logging, messaging,
-    metrics::MetricsMiddleware,
+    metrics::{self, MetricsMiddleware},
 };
 
 #[actix_web::main]
@@ -40,11 +40,13 @@ async fn main() -> io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .app_data(Data::new(schema.clone()))
+            .app_data(Data::new(metrics::init_metrics()))
             .service(
                 web::resource("/graphql")
                     .route(web::post().to(best_combination_api::index))
                     .route(web::get().to(best_combination_api::index_playground)),
             )
+            .route("/metrics", web::get().to(metrics::metrics_handler))
             .wrap(logging::request_logger())
             .wrap(MetricsMiddleware)
     })
