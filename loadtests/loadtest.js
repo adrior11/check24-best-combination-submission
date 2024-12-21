@@ -19,8 +19,8 @@ export const options = {
 };
 
 export default function () {
-  // Randomly select a number of teams between 1 and 50
-  const numTeams = Math.floor(Math.random() * 50) + 1;
+  // Randomly select a number of teams between 10 and 100
+  const numTeams = Math.floor(Math.random() * 91) + 10;
   const selectedTeams = [];
 
   for (let i = 0; i < numTeams; i++) {
@@ -29,18 +29,27 @@ export default function () {
   }
 
   const query = `
-    query BestCombination($teams: [String!]!) {
-      bestCombination(teams: $teams) {
-        id
-        name
-        streaming_package_id
-        monthly_price_cents
-        monthly_price_yearly_subscription_in_cents
+    query GetBestCombination($teams: [String!]!, $opts: FetchOptions) {
+      getBestCombination(teams: $teams, opts: $opts) {
+        status
+        data {
+          packages
+          combinedMonthlyPriceCents
+          combinedMonthlyPriceYearlySubscriptionInCents
+          coverage
+        }
       }
     }
   `;
 
-  const variables = { teams: selectedTeams };
+  const limit = Math.floor(Math.random() * 3) + 1;
+
+  const variables = {
+    teams: selectedTeams,
+    opts: {
+      limit: limit,
+    },
+  };
 
   const payload = JSON.stringify({
     query: query,
