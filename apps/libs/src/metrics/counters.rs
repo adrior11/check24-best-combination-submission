@@ -1,7 +1,10 @@
-// TODO: Add a metric regarding teams size of input
 use once_cell::sync::Lazy;
 use prometheus::{HistogramOpts, HistogramVec, IntCounter, IntCounterVec, Opts};
 
+/// Enum representing label names used in Prometheus metrics.
+///
+/// These labels are used to identify the method, endpoint, and status
+/// of HTTP requests in the metrics.
 enum MetricLabelName {
     Method,
     Endpoint,
@@ -9,6 +12,7 @@ enum MetricLabelName {
 }
 
 impl MetricLabelName {
+    /// Returns the string representation of the label name.
     fn as_str(&self) -> &'static str {
         match self {
             MetricLabelName::Method => "method",
@@ -18,6 +22,9 @@ impl MetricLabelName {
     }
 }
 
+/// A histogram to measure the duration of API requests.
+///
+/// Tracks the duration in seconds and labels metrics with method, endpoint, and status.
 pub static REQUEST_DURATION: Lazy<HistogramVec> = Lazy::new(|| {
     HistogramVec::new(
         HistogramOpts::new(
@@ -33,6 +40,9 @@ pub static REQUEST_DURATION: Lazy<HistogramVec> = Lazy::new(|| {
     .expect("Failed to create REQUEST_DURATION")
 });
 
+/// A counter to track the total number of API requests.
+///
+/// Labels metrics with method, endpoint, and status.
 pub static REQUEST_COUNT: Lazy<IntCounterVec> = Lazy::new(|| {
     IntCounterVec::new(
         Opts::new("api_requests_total", "Total number of API requests"),
@@ -45,6 +55,7 @@ pub static REQUEST_COUNT: Lazy<IntCounterVec> = Lazy::new(|| {
     .expect("Failed to create REQUEST_COUNT")
 });
 
+/// A counter to track the total number of API errors.
 pub static ERROR_COUNT: Lazy<IntCounter> = Lazy::new(|| {
     IntCounter::new("api_errors_total", "Total number of API errors")
         .expect("Failed to create ERROR_COUNT")

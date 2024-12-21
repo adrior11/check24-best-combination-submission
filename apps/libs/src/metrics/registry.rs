@@ -1,4 +1,3 @@
-// NOTE: Registry is not needed
 use prometheus::{Encoder, Registry, TextEncoder};
 
 use super::counters;

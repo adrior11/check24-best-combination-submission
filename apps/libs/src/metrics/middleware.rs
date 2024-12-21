@@ -34,12 +34,13 @@ where
     type InitError = ();
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
 
+    /// Creates a new transformation layer for the middleware.
     fn new_transform(&self, service: S) -> Self::Future {
         future::ready(Ok(MetricsMiddlewareImpl { service }))
     }
 }
 
-// TODO: Should this be pub?
+/// Inner implementation of the MetricsMiddleware.
 pub struct MetricsMiddlewareImpl<S> {
     service: S,
 }
@@ -53,16 +54,19 @@ where
     type Error = Error;
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
 
+    /// Polls the readiness of the service.
     fn poll_ready(&self, ctx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.service.poll_ready(ctx)
     }
 
+    /// Handles an incoming HTTP request and collects metrics.
     fn call(&self, req: ServiceRequest) -> Self::Future {
         let method = req.method().to_string();
         let path = req.path().to_string();
 
         log::debug!("Incoming request: method={}, path={}", method, path);
 
+        // Skip metrics collection for the /metrics endpoint.
         if path == "/metrics" {
             return Box::pin(self.service.call(req));
         }
@@ -98,7 +102,7 @@ where
 
             let status_code = status.as_u16().to_string();
 
-            // Update metrics
+            // Update request count and duration metrics
             REQUEST_COUNT
                 .with_label_values(&[&method, &path, &status_code])
                 .inc();
