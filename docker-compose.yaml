@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: mongodb 
     ports:
-      - '27017:27017'
+      - "27017:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
@@ -19,7 +19,7 @@ services:
     image: redis:alpine
     container_name: redis
     ports:
-      - '6379:6379'
+      - "6379:6379"
     volumes:
       - redis_data:/data/redis
       - ./redis.conf:/usr/local/etc/redis/redis.conf
@@ -27,32 +27,70 @@ services:
     networks:
       - app-network
 
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    deploy:
-      resources:
-        limits:
-          memory: 4g
-    container_name: backend
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api-service:
+    container_name: api-service
     ports:
       - "8000:8000"
+    build:
+      context: .
+      dockerfile: ./apps/best_combination_api/Dockerfile
     environment:
-      MONGODB_URI: ${MONGODB_URI_DOCKER}
-      REDIS_URL: ${REDIS_URL_DOCKER}
+      MONGODB_URI: ${MONGODB_URI_INTERNAL}
+      REDIS_URL: ${REDIS_URL_INTERNAL}
+      RABBITMQ_URL: ${RABBITMQ_URL_INTERNAL}
+      TASK_QUEUE_NAME: ${TASK_QUEUE_NAME}
       LOG_LEVEL: ${LOG_LEVEL}
     networks:
       - app-network
     depends_on:
-      - mongodb
-      - redis
+      mongodb:
+        condition: service_started
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+
+  worker-service:
+    container_name: worker-service
+    build:
+      context: .
+      dockerfile: ./apps/best_combination_worker/Dockerfile
+    environment:
+      MONGODB_URI: ${MONGODB_URI_INTERNAL}
+      REDIS_URL: ${REDIS_URL_INTERNAL}
+      RABBITMQ_URL: ${RABBITMQ_URL_INTERNAL}
+      TASK_QUEUE_NAME: ${TASK_QUEUE_NAME}
+      LOG_LEVEL: ${LOG_LEVEL}
+    networks:
+      - app-network
+    depends_on:
+      mongodb:
+        condition: service_started
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      api-service:
+        condition: service_started
+    restart: unless-stopped 
 
   frontend:
     build:
@@ -63,8 +101,6 @@ services:
       - "3000:3000"
     networks:
       - app-network
-    # depends_on:
-    #   - backend
     environment:
       BACKEND_URL: ${BACKEND_URL}
     restart: unless-stopped
@@ -79,7 +115,7 @@ services:
     networks:
       - app-network
     depends_on:
-      - backend
+      - api-service
     restart: unless-stopped
 
   grafana:
