@@ -1,3 +1,4 @@
+use anyhow::Context;
 use lapin::{
     options::{BasicConsumeOptions, BasicPublishOptions, QueueDeclareOptions},
     types::FieldTable,
@@ -52,8 +53,13 @@ pub async fn get_channel(uri: &str) -> anyhow::Result<Channel> {
         .with_executor(tokio_executor_trait::Tokio::current())
         .with_reactor(tokio_reactor_trait::Tokio);
 
-    let connection = Connection::connect(uri, options).await?;
-    let channel = connection.create_channel().await?;
+    let connection = Connection::connect(uri, options)
+        .await
+        .context("Failed to connect to RabbitMQ")?;
+    let channel = connection
+        .create_channel()
+        .await
+        .context("Failed to RabbitMQ create channel")?;
 
     Ok(channel)
 }
