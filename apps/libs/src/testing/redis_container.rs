@@ -8,6 +8,18 @@ use testcontainers::{
 const REDIS_IMAGE: (&str, &str) = ("redis", "alpine");
 const REDIS_PORT: u16 = 6379;
 
+/// Initializes a Redis container for testing purposes using the `testcontainers` library.
+///
+/// This function creates a Redis container with the specified image and port configuration,
+/// waits for the container to be ready to accept connections, and returns the connection URL.
+///
+/// # Returns
+/// * `Ok(String)` - The Redis connection URL in the format `redis://{host}:{port}` if the container starts successfully.
+/// * `Err(anyhow::Error)` - An error if the container fails to start or its host cannot be retrieved.
+///
+/// # Errors
+/// * Returns an error if the Redis container cannot be started or if the container's host information is unavailable.
+///
 pub async fn init_redis_container() -> anyhow::Result<String> {
     let redis_container = GenericImage::new(REDIS_IMAGE.0, REDIS_IMAGE.1)
         .with_exposed_port(REDIS_PORT.tcp())

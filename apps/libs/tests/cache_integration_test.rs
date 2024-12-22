@@ -1,50 +1,44 @@
-use std::{
-    env,
-    hash::{Hash, Hasher},
-};
-
-use redis::{AsyncCommands, Client};
+use std::collections::HashMap;
 
 use libs::{
     caching::{self, CacheValue},
-    models::dtos::BestCombinationDto,
+    models::dtos::{BestCombinationDto, BestCombinationPackageDto},
+    testing,
 };
-
-async fn cleanup(redis_client: Client, input_ids: Vec<usize>) {
-    let mut connection = redis_client
-        .get_multiplexed_tokio_connection()
-        .await
-        .unwrap();
-    let cache_key = format!("cache:{}", {
-        let mut hasher = std::collections::hash_map::DefaultHasher::new();
-        input_ids.iter().for_each(|id| id.hash(&mut hasher));
-        hasher.finish().to_string()
-    });
-    let _: () = connection.del(cache_key).await.unwrap();
-}
 
 #[tokio::test]
 async fn test_int_cache() -> anyhow::Result<()> {
     dotenv::dotenv().ok();
 
-    let url = env::var("REDIS_URL").expect("REDIS_URL must be set in env");
+    let url = testing::init_redis_container().await.unwrap();
     let redis_client = caching::init_redis(&url).await.unwrap();
 
     let key = vec![1, 2, 3];
-    let value = vec![
-        BestCombinationDto {
-            packages: vec![4, 13, 37],
-            combined_monthly_price_cents: 999,
-            combined_monthly_price_yearly_subscription_in_cents: 699,
-            coverage: 99,
-        },
-        BestCombinationDto {
-            packages: vec![4, 13, 38],
-            combined_monthly_price_cents: 2499,
-            combined_monthly_price_yearly_subscription_in_cents: 1999,
-            coverage: 99,
-        },
-    ];
+    let value = vec![BestCombinationDto {
+        packages: vec![
+            BestCombinationPackageDto {
+                id: 4,
+                coverage: HashMap::new(),
+                monthly_price_cents: Some(10),
+                monthly_price_yearly_subscription_in_cents: 10,
+            },
+            BestCombinationPackageDto {
+                id: 13,
+                coverage: HashMap::new(),
+                monthly_price_cents: Some(10),
+                monthly_price_yearly_subscription_in_cents: 10,
+            },
+            BestCombinationPackageDto {
+                id: 37,
+                coverage: HashMap::new(),
+                monthly_price_cents: Some(10),
+                monthly_price_yearly_subscription_in_cents: 10,
+            },
+        ],
+        combined_monthly_price_cents: 30,
+        combined_monthly_price_yearly_subscription_in_cents: 30,
+        combined_coverage: 99,
+    }];
 
     caching::cache_entry(&redis_client, key.clone(), CacheValue::Data(value.clone()))
         .await
@@ -58,8 +52,6 @@ async fn test_int_cache() -> anyhow::Result<()> {
     let entry = retrieved_entry.unwrap();
     assert_eq!(entry.key, key);
     assert_eq!(entry.value, CacheValue::Data(value));
-
-    cleanup(redis_client, key).await;
 
     Ok(())
 }

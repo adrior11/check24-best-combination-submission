@@ -5,3 +5,4 @@ pub mod logging;
 pub mod messaging;
 pub mod metrics;
 pub mod models;
+pub mod testing;
