@@ -147,62 +147,55 @@ mod tests {
     }
 
     #[actix_web::test]
-    async fn test_metrics_middleware_success() {
-        reset_metrics();
-
-        let app =
-            test::init_service(App::new().wrap(MetricsMiddleware).service(mock_handler)).await;
-
-        // Send a GET request to /test
-        assert_eq!(ERROR_COUNT.get(), 0);
-        let req = TestRequest::get().uri("/test").to_request();
-        assert_eq!(ERROR_COUNT.get(), 0);
-        let resp = test::call_service(&app, req).await;
-        assert_eq!(ERROR_COUNT.get(), 0);
-
-        assert_eq!(resp.status(), StatusCode::OK);
-
-        let request_count = REQUEST_COUNT
-            .with_label_values(&["GET", "/test", "200"])
-            .get();
-        assert_eq!(request_count, 1);
-
-        let histogram = REQUEST_DURATION.with_label_values(&["GET", "/test", "200"]);
-        let metrics = histogram.get_sample_sum();
-        assert!(metrics > 0.0);
-
-        let error_count = ERROR_COUNT.get();
-        assert_eq!(error_count, 0);
-    }
-
-    #[actix_web::test]
-    async fn test_metrics_middleware_error() {
-        reset_metrics();
-
+    async fn test_metrics_middleware() {
         let app = test::init_service(
             App::new()
                 .wrap(MetricsMiddleware)
+                .service(mock_handler)
                 .service(error_mock_handler),
         )
         .await;
 
-        // Send a GET request to /error
-        let req = TestRequest::get().uri("/error").to_request();
-        let resp = test::call_service(&app, req).await;
+        {
+            reset_metrics();
 
-        assert_eq!(resp.status(), StatusCode::INTERNAL_SERVER_ERROR);
+            let req = TestRequest::get().uri("/test").to_request();
+            let resp = test::call_service(&app, req).await;
 
-        let request_count = REQUEST_COUNT
-            .with_label_values(&["GET", "/error", "500"])
-            .get();
-        assert_eq!(request_count, 1);
+            assert_eq!(resp.status(), StatusCode::OK);
 
-        let histogram = REQUEST_DURATION.with_label_values(&["GET", "/error", "500"]);
-        let metrics = histogram.get_sample_sum();
-        assert!(metrics > 0.0);
+            let request_count = REQUEST_COUNT
+                .with_label_values(&["GET", "/test", "200"])
+                .get();
+            assert_eq!(request_count, 1);
 
-        // ERROR_COUNT should be incremented
-        let error_count = ERROR_COUNT.get();
-        assert_eq!(error_count, 1);
+            let histogram = REQUEST_DURATION.with_label_values(&["GET", "/test", "200"]);
+            let metrics = histogram.get_sample_sum();
+            assert!(metrics > 0.0);
+
+            let error_count = ERROR_COUNT.get();
+            assert_eq!(error_count, 0);
+        }
+
+        {
+            reset_metrics();
+
+            let req = TestRequest::get().uri("/error").to_request();
+            let resp = test::call_service(&app, req).await;
+
+            assert_eq!(resp.status(), StatusCode::INTERNAL_SERVER_ERROR);
+
+            let request_count = REQUEST_COUNT
+                .with_label_values(&["GET", "/error", "500"])
+                .get();
+            assert_eq!(request_count, 1);
+
+            let histogram = REQUEST_DURATION.with_label_values(&["GET", "/error", "500"]);
+            let metrics = histogram.get_sample_sum();
+            assert!(metrics > 0.0);
+
+            let error_count = ERROR_COUNT.get();
+            assert_eq!(error_count, 1);
+        }
     }
 }
