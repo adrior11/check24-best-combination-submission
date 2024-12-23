@@ -14,6 +14,26 @@ pub struct BestCombinationSubsetDto {
     pub monthly_price_yearly_subscription_in_cents: usize,
 }
 
+impl BestCombinationSubsetDto {
+    pub fn new(
+        streaming_package_id: usize,
+        elements: BTreeSet<BestCombinationElementDto>,
+        monthly_price_cents: Option<usize>,
+        monthly_price_yearly_subscription_in_cents: usize,
+    ) -> Self {
+        BestCombinationSubsetDto {
+            streaming_package_id,
+            elements,
+            monthly_price_cents,
+            monthly_price_yearly_subscription_in_cents,
+        }
+    }
+
+    pub fn element_ids(&self) -> BTreeSet<usize> {
+        self.elements.iter().map(|elem| elem.game_id).collect()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
