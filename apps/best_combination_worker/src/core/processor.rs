@@ -60,7 +60,6 @@ impl Processor {
                     tokio::spawn(async move {
                         if let Err(e) = processor.process_message(&channel, &delivery).await {
                             log::error!("Failed to process message: {:?}", e);
-                            // TODO: Nack to message / attempt retries
                         }
                     });
                 }
@@ -74,7 +73,10 @@ impl Processor {
 
     async fn process_message(&self, channel: &Channel, delivery: &Delivery) -> anyhow::Result<()> {
         let msg = self.parse_message(&delivery.data)?;
-        let subsets = self.package_dao.preprocess_subsets(&msg.game_ids).await?;
+        let subsets = self
+            .package_dao
+            .aggregate_subsets_by_game_ids(&msg.game_ids)
+            .await?;
 
         log::info!("Performing best combination set cover algorithm...");
         let best_combinations = service::get_best_combinations(&msg.game_ids, &subsets, msg.limit);
