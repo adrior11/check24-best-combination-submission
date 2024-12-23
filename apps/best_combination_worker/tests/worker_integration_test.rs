@@ -1,24 +1,25 @@
 use std::{env, sync::Arc};
 
-use tokio::time::{sleep, Duration};
-
 use best_combination_worker::{Processor, CONFIG};
 use libs::{
-    caching,
+    caching::{self, CacheValue},
     constants::{DATABASE_NAME, STREAMING_PACKAGE_COLLECTION_NAME},
     db::{dao::StreamingPackageDao, DocumentDatabaseConnector, MongoClient},
     messaging::{self, init_mq},
-    models::dtos::BestCombinationDto,
+    models::dtos::{BestCombinationDto, BestCombinationPackageDto},
+    testing,
 };
 
 #[tokio::test]
 async fn test_int_processor() {
     dotenv::dotenv().ok();
 
-    let channel = messaging::get_channel(&CONFIG.rabbitmq_url).await.unwrap();
+    let rabbitmq_url = testing::init_rabbitmq_container().await.unwrap();
+    let channel = messaging::get_channel(&rabbitmq_url).await.unwrap();
     init_mq(&channel, &CONFIG.task_queue_name).await.unwrap();
 
-    let redis_client = caching::init_redis(&CONFIG.redis_url).await.unwrap();
+    let redis_url = testing::init_redis_container().await.unwrap();
+    let redis_client = caching::init_redis(&redis_url).await.unwrap();
 
     let uri = env::var("MONGODB_URI").expect("MONGODB_URI must be set in env");
     let mongo_client = MongoClient::init(&uri, DATABASE_NAME).await;
@@ -30,8 +31,6 @@ async fn test_int_processor() {
     let processor_handle = tokio::spawn(async move {
         processor.start().await.unwrap();
     });
-
-    sleep(Duration::from_secs(1)).await;
 
     let game_ids = vec![
         52, 69, 76, 79, 103, 89, 113, 121, 125, 139, 146, 151, 161, 171, 186, 193, 196, 212, 214,
@@ -50,36 +49,91 @@ async fn test_int_processor() {
         .await
         .unwrap();
 
-    sleep(Duration::from_secs(1)).await;
-
     let expected = [
-        BestCombinationDto {
-            packages: vec![3, 37],
-            combined_monthly_price_cents: 999,
-            combined_monthly_price_yearly_subscription_in_cents: 699,
-            coverage: 99,
-        },
-        BestCombinationDto {
-            packages: vec![3, 38],
-            combined_monthly_price_cents: 2499,
-            combined_monthly_price_yearly_subscription_in_cents: 1999,
-            coverage: 99,
-        },
-        BestCombinationDto {
-            packages: vec![3, 10],
-            combined_monthly_price_cents: 3599,
-            combined_monthly_price_yearly_subscription_in_cents: 2999,
-            coverage: 99,
-        },
+        BestCombinationDto::new(
+            vec![
+                BestCombinationPackageDto::new(
+                    3,
+                    vec![
+                        ("UEFA Champions League 24/25", (0, 2)),
+                        ("Bundesliga 24/25", (0, 2)),
+                        ("Bundesliga 23/24", (0, 2)),
+                    ],
+                    Some(0),
+                    0,
+                ),
+                BestCombinationPackageDto::new(
+                    37,
+                    vec![
+                        ("UEFA Champions League 24/25", (0, 2)),
+                        ("DFB Pokal 24/25", (0, 2)),
+                    ],
+                    Some(999),
+                    699,
+                ),
+            ],
+            999,
+            699,
+            99,
+        ),
+        BestCombinationDto::new(
+            vec![
+                BestCombinationPackageDto::new(
+                    3,
+                    vec![
+                        ("UEFA Champions League 24/25", (0, 2)),
+                        ("Bundesliga 24/25", (0, 2)),
+                        ("Bundesliga 23/24", (0, 2)),
+                    ],
+                    Some(0),
+                    0,
+                ),
+                BestCombinationPackageDto::new(
+                    38,
+                    vec![
+                        ("UEFA Champions League 24/25", (0, 2)),
+                        ("DFB Pokal 24/25", (0, 2)),
+                    ],
+                    Some(2499),
+                    1999,
+                ),
+            ],
+            2499,
+            1999,
+            99,
+        ),
+        BestCombinationDto::new(
+            vec![
+                BestCombinationPackageDto::new(
+                    3,
+                    vec![
+                        ("UEFA Champions League 24/25", (0, 2)),
+                        ("Bundesliga 24/25", (0, 2)),
+                        ("Bundesliga 23/24", (0, 2)),
+                    ],
+                    Some(0),
+                    0,
+                ),
+                BestCombinationPackageDto::new(
+                    10,
+                    vec![("Bundesliga 24/25", (1, 2)), ("DFB Pokal 24/25", (2, 2))],
+                    Some(3599),
+                    2999,
+                ),
+            ],
+            3599,
+            2999,
+            99,
+        ),
     ];
 
-    let cached_result = caching::get_cached_result(&redis_client, &game_ids)
+    let cached_result = caching::get_cached_entry(&redis_client, &game_ids)
         .await
         .unwrap();
     assert!(cached_result.is_some());
 
     let cache_entry = cached_result.unwrap();
-    assert_eq!(cache_entry.value, expected);
+    assert_eq!(cache_entry.value, CacheValue::Data(expected));
 
     processor_handle.abort();
 }
