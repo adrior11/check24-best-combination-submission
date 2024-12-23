@@ -2,7 +2,7 @@ use anyhow::Context;
 use futures::stream::TryStreamExt;
 use mongodb::{bson, Collection};
 
-use super::{pipelines, util};
+use super::{documents, util};
 use crate::models::schemas::GameSchema;
 
 pub struct GameDao {
@@ -14,8 +14,54 @@ impl GameDao {
         Self { collection }
     }
 
-    // TODO: Add find games by tournaments & teams
-    // TODO: Add get all teams, tournaments
+    pub async fn get_teams(&self) -> anyhow::Result<Vec<String>> {
+        let pipeline = documents::aggregate_teams_pipeline();
+        let mut cursor = self.collection.aggregate(pipeline).await?;
+
+        if let Some(doc) = cursor.try_next().await? {
+            if let Ok(teams) = bson::from_bson::<Vec<String>>(
+                doc.get("teams").context("Failed to parse teams")?.clone(),
+            ) {
+                return Ok(teams);
+            }
+        }
+
+        Ok(Vec::new())
+    }
+
+    pub async fn get_tournaments(&self) -> anyhow::Result<Vec<String>> {
+        let pipeline = documents::aggregate_tournaments_pipeline();
+        let mut cursor = self.collection.aggregate(pipeline).await?;
+
+        if let Some(doc) = cursor.try_next().await? {
+            if let Ok(tournaments) = bson::from_bson::<Vec<String>>(
+                doc.get("tournaments")
+                    .context("Failed to parse tournaments")?
+                    .clone(),
+            ) {
+                return Ok(tournaments);
+            }
+        }
+
+        Ok(Vec::new())
+    }
+
+    pub async fn find_games_by_teams(&self, teams: &[String]) -> anyhow::Result<Vec<GameSchema>> {
+        let filter = documents::filter_teams(teams);
+        let cursor = self.collection.find(filter).await?;
+        let games = cursor.try_collect().await?;
+        Ok(games)
+    }
+
+    pub async fn find_games_by_tournaments(
+        &self,
+        tournaments: &[String],
+    ) -> anyhow::Result<Vec<GameSchema>> {
+        let filter = documents::filter_tournaments(tournaments);
+        let cursor = self.collection.find(filter).await?;
+        let games = cursor.try_collect().await?;
+        Ok(games)
+    }
 
     pub async fn aggregate_game_ids(
         &self,
@@ -31,7 +77,7 @@ impl GameDao {
 
         let pipeline = vec![
             bson::doc! { "$match": match_query.unwrap() },
-            pipelines::project_game_id(),
+            documents::project_game_id(),
         ];
 
         let mut cursor = self.collection.aggregate(pipeline).await?;
@@ -59,6 +105,62 @@ mod tests {
         db::{DocumentDatabaseConnector, MongoClient},
     };
     use std::env;
+
+    #[tokio::test]
+    async fn test_get_games() {
+        dotenv::dotenv().ok();
+        let uri = env::var("MONGODB_URI").expect("MONGODB_URI must be set in env");
+        let mongo_client = MongoClient::init(&uri, DATABASE_NAME).await;
+        let game_dao = GameDao::new(mongo_client.get_collection(GAME_COLLECTION_NAME));
+
+        let games = game_dao.get_teams().await.unwrap();
+
+        assert!(!games.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_get_tournaments() {
+        dotenv::dotenv().ok();
+        let uri = env::var("MONGODB_URI").expect("MONGODB_URI must be set in env");
+        let mongo_client = MongoClient::init(&uri, DATABASE_NAME).await;
+        let game_dao = GameDao::new(mongo_client.get_collection(GAME_COLLECTION_NAME));
+
+        let tournaments = game_dao.get_tournaments().await.unwrap();
+
+        assert!(!tournaments.is_empty());
+        assert!(tournaments.len() == 43);
+    }
+
+    #[tokio::test]
+    async fn test_find_games_by_teams() {
+        dotenv::dotenv().ok();
+        let uri = env::var("MONGODB_URI").expect("MONGODB_URI must be set in env");
+        let mongo_client = MongoClient::init(&uri, DATABASE_NAME).await;
+        let game_dao = GameDao::new(mongo_client.get_collection(GAME_COLLECTION_NAME));
+
+        let teams = vec!["Bayern München".to_string()];
+        let games = game_dao.find_games_by_teams(&teams).await.unwrap();
+
+        assert!(!games.is_empty());
+        assert!(games.len() == 79);
+    }
+
+    #[tokio::test]
+    async fn test_find_games_by_tournaments() {
+        dotenv::dotenv().ok();
+        let uri = env::var("MONGODB_URI").expect("MONGODB_URI must be set in env");
+        let mongo_client = MongoClient::init(&uri, DATABASE_NAME).await;
+        let game_dao = GameDao::new(mongo_client.get_collection(GAME_COLLECTION_NAME));
+
+        let tournaments = vec!["Europameisterschaft 2024".to_string()];
+        let games = game_dao
+            .find_games_by_tournaments(&tournaments)
+            .await
+            .unwrap();
+
+        assert!(!games.is_empty());
+        assert!(games.len() == 51);
+    }
 
     #[tokio::test]
     async fn test_aggregate_game_ids_without_input() {

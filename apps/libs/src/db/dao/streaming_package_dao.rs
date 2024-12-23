@@ -4,7 +4,7 @@ use anyhow::Context;
 use futures::TryStreamExt;
 use mongodb::{bson, Collection};
 
-use super::pipelines;
+use super::documents;
 use crate::models::{dtos::BestCombinationSubsetDto, schemas::StreamingPackageSchema};
 
 pub struct StreamingPackageDao {
@@ -31,7 +31,7 @@ impl StreamingPackageDao {
         game_ids: &BTreeSet<usize>,
     ) -> anyhow::Result<Vec<BestCombinationSubsetDto>> {
         let game_ids: Vec<u32> = game_ids.iter().map(|&x| x as u32).collect();
-        let pipeline = pipelines::preprocess_subsets_pipeline(&game_ids);
+        let pipeline = documents::preprocess_subsets_pipeline(&game_ids);
         let mut cursor = self
             .collection
             .aggregate(pipeline)
