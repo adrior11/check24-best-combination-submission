@@ -150,20 +150,6 @@ pub fn map_to_best_combination_dto(
 mod tests {
     use super::*;
 
-    fn create_best_combination_element_dto(
-        game_id: usize,
-        tournament_name: String,
-        live: u8,
-        highlights: u8,
-    ) -> BestCombinationElementDto {
-        BestCombinationElementDto {
-            game_id,
-            tournament_name,
-            live,
-            highlights,
-        }
-    }
-
     #[test]
     fn test_three_stage_coverage_computation() {
         assert_eq!(compute_three_stage_coverage(&[]), 0);
@@ -175,11 +161,11 @@ mod tests {
     #[test]
     fn test_build_coverage_map() {
         let elements = BTreeSet::from([
-            create_best_combination_element_dto(1, "A".to_string(), 1, 1),
-            create_best_combination_element_dto(2, "A".to_string(), 1, 1),
-            create_best_combination_element_dto(3, "B".to_string(), 0, 1),
-            create_best_combination_element_dto(4, "B".to_string(), 1, 0),
-            create_best_combination_element_dto(5, "C".to_string(), 0, 0),
+            BestCombinationElementDto::new(1, "A", 1, 1),
+            BestCombinationElementDto::new(2, "A", 1, 1),
+            BestCombinationElementDto::new(3, "B", 0, 1),
+            BestCombinationElementDto::new(4, "B", 1, 0),
+            BestCombinationElementDto::new(5, "C", 0, 0),
         ]);
 
         let mut expected = HashMap::new();
@@ -198,20 +184,15 @@ mod tests {
         let subsets = vec![
             BestCombinationSubsetDto {
                 streaming_package_id: 1,
-                elements: BTreeSet::from([create_best_combination_element_dto(
-                    1,
-                    "A".to_string(),
-                    1,
-                    1,
-                )]),
+                elements: BTreeSet::from([BestCombinationElementDto::new(1, "A", 1, 1)]),
                 monthly_price_cents: Some(10),
                 monthly_price_yearly_subscription_in_cents: 10,
             },
             BestCombinationSubsetDto {
                 streaming_package_id: 2,
                 elements: BTreeSet::from([
-                    create_best_combination_element_dto(1, "A".to_string(), 1, 1),
-                    create_best_combination_element_dto(3, "A".to_string(), 1, 0),
+                    BestCombinationElementDto::new(1, "A", 1, 1),
+                    BestCombinationElementDto::new(3, "A", 1, 0),
                 ]),
                 monthly_price_cents: None,
                 monthly_price_yearly_subscription_in_cents: 10,
@@ -249,23 +230,13 @@ mod tests {
         let subsets = vec![
             BestCombinationSubsetDto {
                 streaming_package_id: 1,
-                elements: BTreeSet::from([create_best_combination_element_dto(
-                    1,
-                    "A".to_string(),
-                    1,
-                    1,
-                )]),
+                elements: BTreeSet::from([BestCombinationElementDto::new(1, "A", 1, 1)]),
                 monthly_price_cents: Some(10),
                 monthly_price_yearly_subscription_in_cents: 10,
             },
             BestCombinationSubsetDto {
                 streaming_package_id: 1,
-                elements: BTreeSet::from([create_best_combination_element_dto(
-                    1,
-                    "A".to_string(),
-                    1,
-                    1,
-                )]),
+                elements: BTreeSet::from([BestCombinationElementDto::new(1, "A", 1, 1)]),
                 monthly_price_cents: Some(10),
                 monthly_price_yearly_subscription_in_cents: 10,
             },

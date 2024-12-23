@@ -94,7 +94,8 @@ fn enumerate_best_combinations(
                 .find(|s| s.streaming_package_id == id)
                 .unwrap()
                 .elements
-                .clone()
+                .iter()
+                .map(|elem| elem.game_id)
         })
         .collect();
 
@@ -115,7 +116,7 @@ fn enumerate_best_combinations(
         .iter()
         .enumerate()
         .filter_map(|(i, s)| {
-            let uncovered_elements = s.elements.difference(&covered).count();
+            let uncovered_elements = s.element_ids().difference(&covered).count();
 
             if uncovered_elements > 0 {
                 let cost = s.monthly_price_cents.unwrap_or(usize::MAX) as f64;
@@ -172,35 +173,8 @@ mod tests {
     use libs::{
         constants::{DATABASE_NAME, STREAMING_PACKAGE_COLLECTION_NAME},
         db::{dao::StreamingPackageDao, DocumentDatabaseConnector, MongoClient},
+        models::dtos::{BestCombinationElementDto, BestCombinationPackageDto},
     };
-
-    fn create_best_combination_dto(
-        packages: Vec<usize>,
-        combined_monthly_price_cents: usize,
-        combined_monthly_price_yearly_subscription_in_cents: usize,
-        coverage: u8,
-    ) -> BestCombinationDto {
-        BestCombinationDto {
-            packages,
-            combined_monthly_price_cents,
-            combined_monthly_price_yearly_subscription_in_cents,
-            coverage,
-        }
-    }
-
-    fn create_best_combination_subset_dto(
-        streaming_package_id: usize,
-        elements: BTreeSet<usize>,
-        monthly_price_cents: Option<usize>,
-        monthly_price_yearly_subscription_in_cents: usize,
-    ) -> BestCombinationSubsetDto {
-        BestCombinationSubsetDto {
-            streaming_package_id,
-            elements,
-            monthly_price_cents,
-            monthly_price_yearly_subscription_in_cents,
-        }
-    }
 
     async fn setup_data() -> (BTreeSet<usize>, Vec<BestCombinationSubsetDto>) {
         dotenv::dotenv().ok();
@@ -220,7 +194,7 @@ mod tests {
             5557, 5566, 5584, 5573, 5593, 7354, 7890, 8440, 8466, 8486, 8514, 8503, 8533, 8568,
             8560, 8845,
         ]);
-        let subsets = package_dao.preprocess_subsets(&game_ids).await;
+        let subsets = package_dao.aggregate_subsets_by_game_ids(&game_ids).await;
 
         assert!(subsets.is_ok());
 
@@ -233,7 +207,7 @@ mod tests {
         let subsets = vec![];
         let limit = 5;
 
-        let expected_cover = vec![create_best_combination_dto(vec![], 0, 0, 0)];
+        let expected_cover = vec![BestCombinationDto::new(vec![], 0, 0, 0)];
         let results = get_best_combinations(&universe, &subsets, limit);
         assert_eq!(results, expected_cover);
     }
@@ -241,15 +215,19 @@ mod tests {
     #[test]
     fn test_empty_universe() {
         let universe = BTreeSet::new();
-        let subsets = vec![create_best_combination_subset_dto(
+        let subsets = vec![BestCombinationSubsetDto::new(
             1,
-            BTreeSet::from([1, 2, 3]),
+            BTreeSet::from([
+                BestCombinationElementDto::new(1, "", 1, 1),
+                BestCombinationElementDto::new(2, "", 1, 0),
+                BestCombinationElementDto::new(3, "", 1, 0),
+            ]),
             Some(10),
             10,
         )];
         let limit = 5;
 
-        let expected_cover = vec![create_best_combination_dto(vec![], 0, 0, 0)];
+        let expected_cover = vec![BestCombinationDto::new(vec![], 0, 0, 0)];
         let results = get_best_combinations(&universe, &subsets, limit);
         assert_eq!(results, expected_cover);
     }
@@ -260,7 +238,7 @@ mod tests {
         let subsets = vec![];
         let limit = 2;
 
-        let expected_cover = vec![create_best_combination_dto(vec![], 0, 0, 0)];
+        let expected_cover = vec![BestCombinationDto::new(vec![], 0, 0, 0)];
         let results = get_best_combinations(&universe, &subsets, limit);
         assert_eq!(results, expected_cover);
     }
@@ -268,15 +246,29 @@ mod tests {
     #[test]
     fn test_single_full_cover() {
         let universe = BTreeSet::from([1, 2, 3]);
-        let subsets = vec![create_best_combination_subset_dto(
+        let subsets = vec![BestCombinationSubsetDto::new(
             1,
-            BTreeSet::from([1, 2, 3]),
+            BTreeSet::from([
+                BestCombinationElementDto::new(1, "A", 1, 1),
+                BestCombinationElementDto::new(2, "B", 1, 0),
+                BestCombinationElementDto::new(3, "C", 0, 0),
+            ]),
             Some(10),
             10,
         )];
         let limit = 5;
 
-        let expected_cover = vec![create_best_combination_dto(vec![1], 10, 10, 100)];
+        let expected_cover = vec![BestCombinationDto::new(
+            vec![BestCombinationPackageDto::new(
+                1,
+                vec![("A", (2, 2)), ("B", (2, 0)), ("C", (0, 0))],
+                Some(10),
+                10,
+            )],
+            10,
+            10,
+            100,
+        )];
         let results = get_best_combinations(&universe, &subsets, limit);
         assert_eq!(results, expected_cover);
     }
@@ -285,13 +277,31 @@ mod tests {
     fn test_impossible_coverage() {
         let universe = BTreeSet::from([1, 2, 3]);
         let subsets = vec![
-            create_best_combination_subset_dto(1, BTreeSet::from([1]), Some(5), 10),
-            create_best_combination_subset_dto(2, BTreeSet::from([2]), Some(5), 10),
+            BestCombinationSubsetDto::new(
+                1,
+                BTreeSet::from([BestCombinationElementDto::new(1, "", 1, 1)]),
+                Some(5),
+                10,
+            ),
+            BestCombinationSubsetDto::new(
+                2,
+                BTreeSet::from([BestCombinationElementDto::new(2, "", 0, 0)]),
+                Some(5),
+                10,
+            ),
             // Element 3 is never covered
         ];
         let limit = 1;
 
-        let expected_cover = vec![create_best_combination_dto(vec![1, 2], 10, 20, 67)];
+        let expected_cover = vec![BestCombinationDto::new(
+            vec![
+                BestCombinationPackageDto::new(1, vec![("", (2, 2))], Some(5), 10),
+                BestCombinationPackageDto::new(2, vec![("", (0, 0))], Some(5), 10),
+            ],
+            10,
+            20,
+            67,
+        )];
         let results = get_best_combinations(&universe, &subsets, limit);
         assert_eq!(
             results, expected_cover,
@@ -303,12 +313,32 @@ mod tests {
     fn test_duplicate_subsets() {
         let universe = BTreeSet::from([1]);
         let subsets = vec![
-            create_best_combination_subset_dto(1, BTreeSet::from([1]), Some(10), 10),
-            create_best_combination_subset_dto(1, BTreeSet::from([1]), Some(10), 10),
+            BestCombinationSubsetDto::new(
+                1,
+                BTreeSet::from([BestCombinationElementDto::new(1, "", 1, 1)]),
+                Some(5),
+                10,
+            ),
+            BestCombinationSubsetDto::new(
+                1,
+                BTreeSet::from([BestCombinationElementDto::new(1, "", 1, 1)]),
+                Some(5),
+                10,
+            ),
         ];
         let limit = 2;
 
-        let expected_cover = vec![create_best_combination_dto(vec![1], 10, 10, 100)];
+        let expected_cover = vec![BestCombinationDto::new(
+            vec![BestCombinationPackageDto::new(
+                1,
+                vec![("", (2, 2))],
+                Some(5),
+                10,
+            )],
+            5,
+            10,
+            100,
+        )];
         let results = get_best_combinations(&universe, &subsets, limit);
         assert!(results.len() == 1);
         assert_eq!(
@@ -321,17 +351,48 @@ mod tests {
     fn test_identical_subsets() {
         let universe = BTreeSet::from([1, 2]);
         let subsets = vec![
-            create_best_combination_subset_dto(1, BTreeSet::from([1]), Some(5), 5),
-            create_best_combination_subset_dto(2, BTreeSet::from([1]), Some(5), 5),
-            create_best_combination_subset_dto(3, BTreeSet::from([2]), Some(5), 5),
+            BestCombinationSubsetDto::new(
+                1,
+                BTreeSet::from([BestCombinationElementDto::new(1, "", 1, 1)]),
+                Some(5),
+                5,
+            ),
+            BestCombinationSubsetDto::new(
+                2,
+                BTreeSet::from([BestCombinationElementDto::new(1, "", 1, 1)]),
+                Some(5),
+                5,
+            ),
+            BestCombinationSubsetDto::new(
+                3,
+                BTreeSet::from([BestCombinationElementDto::new(2, "", 1, 1)]),
+                Some(5),
+                5,
+            ),
         ];
         let limit = 5;
 
         // Covers {1,3} and {2,3} as subsets 1 and 2 are identical in coverage and cost,
         // the algorithm should produce distinct solutions since they have different IDs.
         let expected_cover = &[
-            create_best_combination_dto(vec![1, 3], 10, 10, 100),
-            create_best_combination_dto(vec![2, 3], 10, 10, 100),
+            BestCombinationDto::new(
+                vec![
+                    BestCombinationPackageDto::new(1, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(3, vec![("", (2, 2))], Some(5), 5),
+                ],
+                10,
+                10,
+                100,
+            ),
+            BestCombinationDto::new(
+                vec![
+                    BestCombinationPackageDto::new(2, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(3, vec![("", (2, 2))], Some(5), 5),
+                ],
+                10,
+                10,
+                100,
+            ),
         ];
         let results = get_best_combinations(&universe, &subsets, limit);
         assert_eq!(results, expected_cover);
@@ -341,25 +402,152 @@ mod tests {
     fn test_large_universe() {
         let universe: BTreeSet<_> = (1..=10).collect();
         let subsets = vec![
-            create_best_combination_subset_dto(1, BTreeSet::from([1, 2, 3]), Some(10), 10),
-            create_best_combination_subset_dto(2, BTreeSet::from([2, 4, 5]), Some(10), 10),
-            create_best_combination_subset_dto(3, BTreeSet::from([3, 6]), Some(10), 10),
-            create_best_combination_subset_dto(4, BTreeSet::from([7, 8]), Some(10), 10),
-            create_best_combination_subset_dto(5, BTreeSet::from([9, 10]), Some(10), 10),
-            create_best_combination_subset_dto(6, BTreeSet::from([4, 7]), Some(10), 10),
-            create_best_combination_subset_dto(7, BTreeSet::from([5, 8, 9]), Some(10), 10),
-            create_best_combination_subset_dto(8, BTreeSet::from([10, 1]), Some(10), 10),
+            BestCombinationSubsetDto::new(
+                1,
+                BTreeSet::from([
+                    BestCombinationElementDto::new(1, "", 1, 1),
+                    BestCombinationElementDto::new(2, "", 1, 1),
+                    BestCombinationElementDto::new(3, "", 1, 1),
+                ]),
+                Some(5),
+                5,
+            ),
+            BestCombinationSubsetDto::new(
+                2,
+                BTreeSet::from([
+                    BestCombinationElementDto::new(2, "", 1, 1),
+                    BestCombinationElementDto::new(4, "", 1, 1),
+                    BestCombinationElementDto::new(5, "", 1, 1),
+                ]),
+                Some(5),
+                5,
+            ),
+            BestCombinationSubsetDto::new(
+                3,
+                BTreeSet::from([
+                    BestCombinationElementDto::new(3, "", 1, 1),
+                    BestCombinationElementDto::new(6, "", 1, 1),
+                ]),
+                Some(5),
+                5,
+            ),
+            BestCombinationSubsetDto::new(
+                4,
+                BTreeSet::from([
+                    BestCombinationElementDto::new(7, "", 1, 1),
+                    BestCombinationElementDto::new(8, "", 1, 1),
+                ]),
+                Some(5),
+                5,
+            ),
+            BestCombinationSubsetDto::new(
+                5,
+                BTreeSet::from([
+                    BestCombinationElementDto::new(9, "", 1, 1),
+                    BestCombinationElementDto::new(10, "", 1, 1),
+                ]),
+                Some(5),
+                5,
+            ),
+            BestCombinationSubsetDto::new(
+                6,
+                BTreeSet::from([
+                    BestCombinationElementDto::new(4, "", 1, 1),
+                    BestCombinationElementDto::new(7, "", 1, 1),
+                ]),
+                Some(5),
+                5,
+            ),
+            BestCombinationSubsetDto::new(
+                7,
+                BTreeSet::from([
+                    BestCombinationElementDto::new(5, "", 1, 1),
+                    BestCombinationElementDto::new(8, "", 1, 1),
+                    BestCombinationElementDto::new(9, "", 1, 1),
+                ]),
+                Some(5),
+                5,
+            ),
+            BestCombinationSubsetDto::new(
+                8,
+                BTreeSet::from([
+                    BestCombinationElementDto::new(10, "", 1, 1),
+                    BestCombinationElementDto::new(1, "", 1, 1),
+                ]),
+                Some(5),
+                5,
+            ),
         ];
         let limit = 5;
 
         let expected_cover = &[
-            create_best_combination_dto(vec![1, 3, 5, 6, 7], 50, 50, 100),
-            create_best_combination_dto(vec![1, 3, 6, 7, 8], 50, 50, 100),
-            create_best_combination_dto(vec![1, 2, 3, 4, 5, 7], 60, 60, 100),
-            create_best_combination_dto(vec![1, 2, 3, 4, 7, 8], 60, 60, 100),
-            create_best_combination_dto(vec![1, 2, 3, 5, 6, 7], 60, 60, 100),
+            BestCombinationDto::new(
+                vec![
+                    BestCombinationPackageDto::new(1, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(3, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(5, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(6, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(7, vec![("", (2, 2))], Some(5), 5),
+                ],
+                25,
+                25,
+                100,
+            ),
+            BestCombinationDto::new(
+                vec![
+                    BestCombinationPackageDto::new(1, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(3, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(6, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(7, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(8, vec![("", (2, 2))], Some(5), 5),
+                ],
+                25,
+                25,
+                100,
+            ),
+            BestCombinationDto::new(
+                vec![
+                    BestCombinationPackageDto::new(1, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(2, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(3, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(4, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(5, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(7, vec![("", (2, 2))], Some(5), 5),
+                ],
+                30,
+                30,
+                100,
+            ),
+            BestCombinationDto::new(
+                vec![
+                    BestCombinationPackageDto::new(1, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(2, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(3, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(4, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(7, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(8, vec![("", (2, 2))], Some(5), 5),
+                ],
+                30,
+                30,
+                100,
+            ),
+            BestCombinationDto::new(
+                vec![
+                    BestCombinationPackageDto::new(1, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(2, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(3, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(5, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(6, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(7, vec![("", (2, 2))], Some(5), 5),
+                ],
+                30,
+                30,
+                100,
+            ),
         ];
         let results = get_best_combinations(&universe, &subsets, limit);
+
+        dbg!(&results);
 
         assert!(
             !results.is_empty(),
@@ -373,25 +561,139 @@ mod tests {
     fn test_uncoverable_approximation() {
         let universe: BTreeSet<_> = (1..=10).collect();
         let subsets = vec![
-            create_best_combination_subset_dto(1, BTreeSet::from([1, 2, 3]), Some(10), 10),
-            create_best_combination_subset_dto(2, BTreeSet::from([2, 4, 5]), Some(10), 10),
-            create_best_combination_subset_dto(4, BTreeSet::from([7, 8]), Some(10), 10),
-            create_best_combination_subset_dto(5, BTreeSet::from([9, 10]), Some(10), 10),
-            create_best_combination_subset_dto(6, BTreeSet::from([4, 7]), Some(10), 10),
-            create_best_combination_subset_dto(7, BTreeSet::from([5, 8, 9]), Some(10), 10),
-            create_best_combination_subset_dto(8, BTreeSet::from([10, 1]), Some(10), 10),
+            BestCombinationSubsetDto::new(
+                1,
+                BTreeSet::from([
+                    BestCombinationElementDto::new(1, "", 1, 1),
+                    BestCombinationElementDto::new(2, "", 1, 1),
+                    BestCombinationElementDto::new(3, "", 1, 1),
+                ]),
+                Some(5),
+                5,
+            ),
+            BestCombinationSubsetDto::new(
+                2,
+                BTreeSet::from([
+                    BestCombinationElementDto::new(2, "", 1, 1),
+                    BestCombinationElementDto::new(4, "", 1, 1),
+                    BestCombinationElementDto::new(5, "", 1, 1),
+                ]),
+                Some(5),
+                5,
+            ),
+            BestCombinationSubsetDto::new(
+                4,
+                BTreeSet::from([
+                    BestCombinationElementDto::new(7, "", 1, 1),
+                    BestCombinationElementDto::new(8, "", 1, 1),
+                ]),
+                Some(5),
+                5,
+            ),
+            BestCombinationSubsetDto::new(
+                5,
+                BTreeSet::from([
+                    BestCombinationElementDto::new(9, "", 1, 1),
+                    BestCombinationElementDto::new(10, "", 1, 1),
+                ]),
+                Some(5),
+                5,
+            ),
+            BestCombinationSubsetDto::new(
+                6,
+                BTreeSet::from([
+                    BestCombinationElementDto::new(4, "", 1, 1),
+                    BestCombinationElementDto::new(7, "", 1, 1),
+                ]),
+                Some(5),
+                5,
+            ),
+            BestCombinationSubsetDto::new(
+                7,
+                BTreeSet::from([
+                    BestCombinationElementDto::new(5, "", 1, 1),
+                    BestCombinationElementDto::new(8, "", 1, 1),
+                    BestCombinationElementDto::new(9, "", 1, 1),
+                ]),
+                Some(5),
+                5,
+            ),
+            BestCombinationSubsetDto::new(
+                8,
+                BTreeSet::from([
+                    BestCombinationElementDto::new(10, "", 1, 1),
+                    BestCombinationElementDto::new(1, "", 1, 1),
+                ]),
+                Some(5),
+                5,
+            ),
         ];
         let limit = 5;
 
         // Element 6 of the universe is never being covered, as S3 is missing.
         let expected_cover = &[
-            create_best_combination_dto(vec![1, 5, 6, 7], 40, 40, 90),
-            create_best_combination_dto(vec![1, 6, 7, 8], 40, 40, 90),
-            create_best_combination_dto(vec![1, 2, 4, 5, 7], 50, 50, 90),
-            create_best_combination_dto(vec![1, 2, 4, 7, 8], 50, 50, 90),
-            create_best_combination_dto(vec![1, 2, 5, 6, 7], 50, 50, 90),
+            BestCombinationDto::new(
+                vec![
+                    BestCombinationPackageDto::new(1, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(5, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(6, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(7, vec![("", (2, 2))], Some(5), 5),
+                ],
+                20,
+                20,
+                90,
+            ),
+            BestCombinationDto::new(
+                vec![
+                    BestCombinationPackageDto::new(1, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(6, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(7, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(8, vec![("", (2, 2))], Some(5), 5),
+                ],
+                20,
+                20,
+                90,
+            ),
+            BestCombinationDto::new(
+                vec![
+                    BestCombinationPackageDto::new(1, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(2, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(4, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(5, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(7, vec![("", (2, 2))], Some(5), 5),
+                ],
+                25,
+                25,
+                90,
+            ),
+            BestCombinationDto::new(
+                vec![
+                    BestCombinationPackageDto::new(1, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(2, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(4, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(7, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(8, vec![("", (2, 2))], Some(5), 5),
+                ],
+                25,
+                25,
+                90,
+            ),
+            BestCombinationDto::new(
+                vec![
+                    BestCombinationPackageDto::new(1, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(2, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(5, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(6, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(7, vec![("", (2, 2))], Some(5), 5),
+                ],
+                25,
+                25,
+                90,
+            ),
         ];
         let results = get_best_combinations(&universe, &subsets, limit);
+
+        dbg!(&results);
 
         assert!(
             !results.is_empty(),
@@ -405,23 +707,37 @@ mod tests {
     async fn test_get_best_combination_without_limit() {
         let (game_ids, subsets) = setup_data().await;
 
-        let expected = [BestCombinationDto {
-            packages: vec![3, 37],
-            combined_monthly_price_cents: 999,
-            combined_monthly_price_yearly_subscription_in_cents: 699,
-            coverage: 99,
-        }];
-        let expected_package_ids = [[3, 37]];
+        let expected = [BestCombinationDto::new(
+            vec![
+                BestCombinationPackageDto::new(
+                    3,
+                    vec![
+                        ("UEFA Champions League 24/25", (0, 2)),
+                        ("Bundesliga 24/25", (0, 2)),
+                        ("Bundesliga 23/24", (0, 2)),
+                    ],
+                    Some(0),
+                    0,
+                ),
+                BestCombinationPackageDto::new(
+                    37,
+                    vec![
+                        ("UEFA Champions League 24/25", (0, 2)),
+                        ("DFB Pokal 24/25", (0, 2)),
+                    ],
+                    Some(999),
+                    699,
+                ),
+            ],
+            999,
+            699,
+            99,
+        )];
 
         let limit = 1;
         let results = get_best_combinations(&game_ids, &subsets, limit);
-        let result_game_ids: Vec<Vec<usize>> =
-            results.iter().cloned().map(|bc| bc.packages).collect();
 
         assert!(!results.is_empty());
-        assert!(!result_game_ids.is_empty());
-
-        assert_eq!(result_game_ids, expected_package_ids);
         assert_eq!(results, expected);
     }
 
@@ -430,36 +746,87 @@ mod tests {
         let (game_ids, subsets) = setup_data().await;
 
         let expected = [
-            BestCombinationDto {
-                packages: vec![3, 37],
-                combined_monthly_price_cents: 999,
-                combined_monthly_price_yearly_subscription_in_cents: 699,
-                coverage: 99,
-            },
-            BestCombinationDto {
-                packages: vec![3, 38],
-                combined_monthly_price_cents: 2499,
-                combined_monthly_price_yearly_subscription_in_cents: 1999,
-                coverage: 99,
-            },
-            BestCombinationDto {
-                packages: vec![3, 10],
-                combined_monthly_price_cents: 3599,
-                combined_monthly_price_yearly_subscription_in_cents: 2999,
-                coverage: 99,
-            },
+            BestCombinationDto::new(
+                vec![
+                    BestCombinationPackageDto::new(
+                        3,
+                        vec![
+                            ("UEFA Champions League 24/25", (0, 2)),
+                            ("Bundesliga 24/25", (0, 2)),
+                            ("Bundesliga 23/24", (0, 2)),
+                        ],
+                        Some(0),
+                        0,
+                    ),
+                    BestCombinationPackageDto::new(
+                        37,
+                        vec![
+                            ("UEFA Champions League 24/25", (0, 2)),
+                            ("DFB Pokal 24/25", (0, 2)),
+                        ],
+                        Some(999),
+                        699,
+                    ),
+                ],
+                999,
+                699,
+                99,
+            ),
+            BestCombinationDto::new(
+                vec![
+                    BestCombinationPackageDto::new(
+                        3,
+                        vec![
+                            ("UEFA Champions League 24/25", (0, 2)),
+                            ("Bundesliga 24/25", (0, 2)),
+                            ("Bundesliga 23/24", (0, 2)),
+                        ],
+                        Some(0),
+                        0,
+                    ),
+                    BestCombinationPackageDto::new(
+                        38,
+                        vec![
+                            ("UEFA Champions League 24/25", (0, 2)),
+                            ("DFB Pokal 24/25", (0, 2)),
+                        ],
+                        Some(2499),
+                        1999,
+                    ),
+                ],
+                2499,
+                1999,
+                99,
+            ),
+            BestCombinationDto::new(
+                vec![
+                    BestCombinationPackageDto::new(
+                        3,
+                        vec![
+                            ("UEFA Champions League 24/25", (0, 2)),
+                            ("Bundesliga 24/25", (0, 2)),
+                            ("Bundesliga 23/24", (0, 2)),
+                        ],
+                        Some(0),
+                        0,
+                    ),
+                    BestCombinationPackageDto::new(
+                        10,
+                        vec![("Bundesliga 24/25", (1, 2)), ("DFB Pokal 24/25", (2, 2))],
+                        Some(3599),
+                        2999,
+                    ),
+                ],
+                3599,
+                2999,
+                99,
+            ),
         ];
-        let expected_package_ids = [[3, 37], [3, 38], [3, 10]];
 
         let limit = 3;
         let results = get_best_combinations(&game_ids, &subsets, limit);
-        let result_game_ids: Vec<Vec<usize>> =
-            results.iter().cloned().map(|bc| bc.packages).collect();
 
         assert!(!results.is_empty());
-        assert!(!result_game_ids.is_empty());
-
-        assert_eq!(result_game_ids, expected_package_ids);
         assert_eq!(results, expected);
     }
 }
