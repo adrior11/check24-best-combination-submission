@@ -1,8 +1,11 @@
 use std::collections::HashMap;
 
 use libs::{
-    caching::{self, CacheValue},
-    models::dtos::{BestCombinationDto, BestCombinationPackageDto},
+    caching::{self, CacheValue, CompositeKey},
+    models::{
+        dtos::{BestCombinationDto, BestCombinationPackageDto},
+        fetch_types::FetchOptions,
+    },
     testing,
 };
 
@@ -13,7 +16,7 @@ async fn test_int_cache() -> anyhow::Result<()> {
     let url = testing::init_redis_container().await.unwrap();
     let redis_client = caching::init_redis(&url).await.unwrap();
 
-    let key = vec![1, 2, 3];
+    let key = CompositeKey::new(vec![1, 2, 3], FetchOptions::new(1));
     let value = vec![BestCombinationDto {
         packages: vec![
             BestCombinationPackageDto {
@@ -40,13 +43,14 @@ async fn test_int_cache() -> anyhow::Result<()> {
         combined_coverage: 99,
     }];
 
-    caching::cache_entry(&redis_client, key.clone(), CacheValue::Data(value.clone()))
+    caching::cache_entry(&redis_client, &key, CacheValue::Data(value.clone()))
         .await
         .unwrap();
 
-    let retrieved_entry = caching::get_cached_entry::<Vec<BestCombinationDto>>(&redis_client, &key)
-        .await
-        .unwrap();
+    let retrieved_entry =
+        caching::get_cached_entry::<CompositeKey, Vec<BestCombinationDto>>(&redis_client, &key)
+            .await
+            .unwrap();
 
     assert!(retrieved_entry.is_some());
     let entry = retrieved_entry.unwrap();
