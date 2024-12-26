@@ -3,7 +3,7 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 use serde::{Deserialize, Serialize};
 
 use super::StableHash;
-use crate::models::fetch_types::FetchOptions;
+use crate::models::{fetch_types::FetchOptions, payloads::TaskMessagePayload};
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct CompositeKey {
@@ -14,6 +14,15 @@ pub struct CompositeKey {
 impl CompositeKey {
     pub fn new(ids: Vec<usize>, opts: FetchOptions) -> CompositeKey {
         CompositeKey { ids, opts }
+    }
+}
+
+impl From<TaskMessagePayload> for CompositeKey {
+    fn from(o: TaskMessagePayload) -> Self {
+        CompositeKey {
+            ids: o.game_ids,
+            opts: FetchOptions { limit: o.limit },
+        }
     }
 }
 

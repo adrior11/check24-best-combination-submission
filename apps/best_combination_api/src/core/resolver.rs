@@ -1,17 +1,18 @@
 use std::sync::Arc;
 
 use async_graphql::*;
+
 use libs::{
-    caching::{self, CacheValue, RedisClient},
+    caching::{self, CacheValue, CompositeKey, RedisClient},
     db::dao::GameDao,
     messaging::{self, MqChannel},
-    models::dtos::BestCombinationDto,
+    models::{
+        dtos::BestCombinationDto,
+        fetch_types::{FetchOptions, FetchResult, FetchStatus},
+        payloads::TaskMessagePayload,
+    },
 };
 
-use super::{
-    mapper,
-    types::{FetchOptions, FetchResult, FetchStatus},
-};
 use crate::CONFIG;
 
 pub type AppSchema = Schema<QueryRoot, EmptyMutation, EmptySubscription>;
@@ -23,14 +24,17 @@ impl QueryRoot {
     async fn get_best_combination(
         &self,
         ctx: &Context<'_>,
-        teams: Vec<String>,
+        teams: Option<Vec<String>>,
+        tournaments: Option<Vec<String>>,
         opts: FetchOptions,
     ) -> async_graphql::Result<FetchResult> {
         let game_dao = ctx.data::<Arc<GameDao>>()?;
         let redis_client = ctx.data::<Arc<RedisClient>>()?;
         let mq_channel = ctx.data::<Arc<MqChannel>>()?;
 
-        let game_ids = game_dao.fetch_game_ids(&teams).await?; // NOTE: Can data-fetch do this?
+        let game_ids = game_dao
+            .aggregate_game_ids(teams.clone(), tournaments)
+            .await?;
         if game_ids.is_empty() {
             return Err(Error::new(format!(
                 "Unknown input: no matching games found for teams {:?}",
@@ -38,17 +42,21 @@ impl QueryRoot {
             )));
         }
 
-        if let Some(cached_entry) = caching::get_cached_entry(redis_client, &game_ids).await? {
+        let key = CompositeKey::new(game_ids.clone(), opts.clone());
+
+        if let Some(cached_entry) = caching::get_cached_entry(redis_client, &key).await? {
             match cached_entry.value {
                 CacheValue::Processing => {
                     return Ok(FetchResult {
                         status: FetchStatus::Processing,
+                        ids: game_ids,
                         data: None,
                     })
                 }
                 CacheValue::Data(data) => {
                     return Ok(FetchResult {
                         status: FetchStatus::Ready,
+                        ids: game_ids,
                         data: Some(data),
                     })
                 }
@@ -57,12 +65,12 @@ impl QueryRoot {
 
         caching::cache_entry(
             redis_client,
-            game_ids.clone(),
+            &key,
             CacheValue::<Vec<BestCombinationDto>>::Processing,
         )
         .await?;
 
-        let payload = mapper::map_task_message_payload(game_ids, opts);
+        let payload = TaskMessagePayload::from(key);
         let job_enqueued = messaging::enqueue_job(mq_channel, &CONFIG.task_queue_name, &payload)
             .await
             .is_ok();
@@ -73,7 +81,11 @@ impl QueryRoot {
             FetchStatus::Error
         };
 
-        Ok(FetchResult { status, data: None })
+        Ok(FetchResult {
+            status,
+            ids: game_ids,
+            data: None,
+        })
     }
 }
 

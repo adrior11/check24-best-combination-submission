@@ -1,13 +1,13 @@
-use std::sync::Arc;
+use std::{collections::BTreeSet, sync::Arc};
 
 use futures::stream::StreamExt;
 use lapin::{message::Delivery, options::BasicAckOptions, Channel, Consumer};
 
 use libs::{
-    caching::{self, CacheValue, RedisClient},
+    caching::{self, CacheValue, CompositeKey, RedisClient},
     db::dao::StreamingPackageDao,
     messaging,
-    models::payloads::TaskMessagePayload,
+    models::{fetch_types::FetchOptions, payloads::TaskMessagePayload},
 };
 
 use super::service;
@@ -79,12 +79,13 @@ impl Processor {
             .await?;
 
         log::info!("Performing best combination set cover algorithm...");
-        let best_combinations = service::get_best_combinations(&msg.game_ids, &subsets, msg.limit);
+        let universe: BTreeSet<usize> = msg.game_ids.iter().copied().collect();
+        let best_combinations = service::get_best_combinations(&universe, &subsets, msg.limit);
 
-        let cache_key: Vec<usize> = msg.game_ids.into_iter().collect();
+        let key = CompositeKey::new(msg.game_ids, FetchOptions::new(msg.limit));
         caching::cache_entry(
             &self.redis_client,
-            cache_key,
+            &key,
             CacheValue::Data(best_combinations),
         )
         .await?;

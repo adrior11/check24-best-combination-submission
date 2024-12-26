@@ -1,5 +1,3 @@
-use std::collections::BTreeSet;
-
 use anyhow::Context;
 use futures::TryStreamExt;
 use mongodb::{bson, Collection};
@@ -28,7 +26,7 @@ impl StreamingPackageDao {
 
     pub async fn aggregate_subsets_by_game_ids(
         &self,
-        game_ids: &BTreeSet<usize>,
+        game_ids: &[usize],
     ) -> anyhow::Result<Vec<BestCombinationSubsetDto>> {
         let game_ids: Vec<u32> = game_ids.iter().map(|&x| x as u32).collect();
         let pipeline = documents::preprocess_subsets_pipeline(&game_ids);
@@ -95,14 +93,14 @@ mod tests {
             mongo_client.get_collection(STREAMING_PACKAGE_COLLECTION_NAME),
         );
 
-        let game_ids = BTreeSet::from([
+        let game_ids = vec![
             52, 69, 76, 79, 103, 89, 113, 121, 125, 139, 146, 151, 161, 171, 186, 193, 196, 212,
             214, 219, 225, 240, 251, 257, 261, 272, 284, 293, 307, 320, 302, 325, 337, 349, 356,
             5305, 5320, 5325, 5330, 5341, 5349, 5364, 5367, 5383, 5386, 5394, 5404, 5416, 5436,
             5440, 5422, 5449, 5459, 5467, 5474, 5483, 5492, 5501, 5511, 5525, 5529, 5541, 5548,
             5557, 5566, 5584, 5573, 5593, 7354, 7890, 8440, 8466, 8486, 8514, 8503, 8533, 8568,
             8560, 8845,
-        ]);
+        ];
         let subsets = package_dao
             .aggregate_subsets_by_game_ids(&game_ids)
             .await

@@ -176,7 +176,7 @@ mod tests {
         models::dtos::{BestCombinationElementDto, BestCombinationPackageDto},
     };
 
-    async fn setup_data() -> (BTreeSet<usize>, Vec<BestCombinationSubsetDto>) {
+    async fn setup_data() -> (Vec<usize>, Vec<BestCombinationSubsetDto>) {
         dotenv::dotenv().ok();
 
         let mongo_client = MongoClient::init(&CONFIG.mongodb_uri, DATABASE_NAME).await;
@@ -186,14 +186,14 @@ mod tests {
 
         // Game 8533 of Bayer Muenchen isn't covered by a single offer.
         // The Coverage will never be able to reach 100% given this case.
-        let game_ids = BTreeSet::from([
+        let game_ids = vec![
             52, 69, 76, 79, 103, 89, 113, 121, 125, 139, 146, 151, 161, 171, 186, 193, 196, 212,
             214, 219, 225, 240, 251, 257, 261, 272, 284, 293, 307, 320, 302, 325, 337, 349, 356,
             5305, 5320, 5325, 5330, 5341, 5349, 5364, 5367, 5383, 5386, 5394, 5404, 5416, 5436,
             5440, 5422, 5449, 5459, 5467, 5474, 5483, 5492, 5501, 5511, 5525, 5529, 5541, 5548,
             5557, 5566, 5584, 5573, 5593, 7354, 7890, 8440, 8466, 8486, 8514, 8503, 8533, 8568,
             8560, 8845,
-        ]);
+        ];
         let subsets = package_dao.aggregate_subsets_by_game_ids(&game_ids).await;
 
         assert!(subsets.is_ok());
@@ -735,7 +735,8 @@ mod tests {
         )];
 
         let limit = 1;
-        let results = get_best_combinations(&game_ids, &subsets, limit);
+        let universe: BTreeSet<usize> = game_ids.iter().copied().collect();
+        let results = get_best_combinations(&universe, &subsets, limit);
 
         assert!(!results.is_empty());
         assert_eq!(results, expected);
@@ -824,7 +825,8 @@ mod tests {
         ];
 
         let limit = 3;
-        let results = get_best_combinations(&game_ids, &subsets, limit);
+        let universe: BTreeSet<usize> = game_ids.iter().copied().collect();
+        let results = get_best_combinations(&universe, &subsets, limit);
 
         assert!(!results.is_empty());
         assert_eq!(results, expected);
