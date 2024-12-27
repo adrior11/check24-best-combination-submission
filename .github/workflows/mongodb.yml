@@ -37,15 +37,29 @@ jobs:
               break
             fi
             echo "Waiting for MongoDB initialization to complete..."
-            docker-compose logs mongodb
             sleep 5
           done
 
           # If the loop didn't break, fail the CI step
           if ! docker logs mongodb 2>&1 | grep -q "Creating index for bc_streaming_package..."; then
             echo "MongoDB did not complete initialization within the expected time."
+            docker-compose logs mongodb
             exit 1
           fi
+
+      - name: Verify collections and document counts
+        run: |
+          bc_game_count=$(docker exec mongodb mongosh best_combination --quiet --eval "db.bc_game.countDocuments()")
+          bc_streaming_offer_count=$(docker exec mongodb mongosh best_combination --quiet --eval "db.bc_streaming_offer.countDocuments()")
+          bc_streaming_package_count=$(docker exec mongodb mongosh best_combination --quiet --eval "db.bc_streaming_package.countDocuments()")
+
+          echo "bc_game count: $bc_game_count"
+          echo "bc_streaming_offer count: $bc_streaming_offer_count"
+          echo "bc_streaming_package count: $bc_streaming_package_count"
+
+          [[ "$bc_game_count" -eq 8871 ]] || { echo "bc_game count mismatch"; exit 1; }
+          [[ "$bc_streaming_offer_count" -eq 32439 ]] || { echo "bc_streaming_offer count mismatch"; exit 1; }
+          [[ "$bc_streaming_package_count" -eq 37 ]] || { echo "bc_streaming_package count mismatch"; exit 1; }
 
       - name: Cleanup
         run: docker-compose -f docker-compose.yaml down
