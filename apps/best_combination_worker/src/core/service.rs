@@ -547,8 +547,6 @@ mod tests {
         ];
         let results = get_best_combinations(&universe, &subsets, limit);
 
-        dbg!(&results);
-
         assert!(
             !results.is_empty(),
             "Should find at least one cover for a large universe"
@@ -692,8 +690,6 @@ mod tests {
             ),
         ];
         let results = get_best_combinations(&universe, &subsets, limit);
-
-        dbg!(&results);
 
         assert!(
             !results.is_empty(),

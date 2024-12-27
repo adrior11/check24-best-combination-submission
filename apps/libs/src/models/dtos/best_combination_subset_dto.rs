@@ -178,7 +178,6 @@ mod tests {
         "#;
 
         let package: Result<BestCombinationSubsetDto, _> = serde_json::from_str(json_data);
-        dbg!(&package);
         assert!(package.is_ok());
         assert_eq!(package.unwrap().monthly_price_cents, None);
     }

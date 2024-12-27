@@ -86,12 +86,9 @@ where
                 }
             };
 
-            dbg!(&status);
-
             // Increament ERROR_COUNT if status code is 5xx
             if status.is_server_error() {
                 ERROR_COUNT.inc();
-                println!("ERROR-2");
                 log::error!(
                     "Request failed: method={}, path={}, status={}",
                     method,
