@@ -10,6 +10,10 @@ jobs:
   test-mongodb:
     runs-on: ubuntu-latest
 
+    env:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -17,20 +21,8 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Build MongoDB Docker image
-        run: |
-          docker build -t my-mongodb-image ./mongodb
-
-      - name: Run MongoDB container
-        env:
-          MONGO_INITDB_ROOT_USERNAME: root
-          MONGO_INITDB_ROOT_PASSWORD: example
-        run: |
-          docker run -d --name mongodb \
-            -e MONGO_INITDB_ROOT_USERNAME=$MONGO_INITDB_ROOT_USERNAME \
-            -e MONGO_INITDB_ROOT_PASSWORD=$MONGO_INITDB_ROOT_PASSWORD \
-            -p 27017:27017 \
-            my-mongodb-image
+      - name: Start MongoDB with docker-compose
+        run: docker-compose -f docker-compose.yaml up -d mongodb
 
       - name: Wait for MongoDB to be ready
         run: |
@@ -58,4 +50,4 @@ jobs:
           [[ "$bc_streaming_package_count" -eq 37 ]] || { echo "bc_streaming_package count mismatch"; exit 1; }
 
       - name: Cleanup
-        run: docker rm -f mongodb
+        run: docker-compose -f docker-compose.yaml down
