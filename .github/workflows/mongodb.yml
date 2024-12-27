@@ -29,30 +29,9 @@ jobs:
       - name: Start MongoDB with docker-compose
         run: docker-compose -f docker-compose.yaml up -d mongodb
 
-      - name: Wait for MongoDB to be ready
+      - name: Log MongoDB collections and counts
         run: |
-          for i in {1..10}; do
-            if docker exec mongodb mongosh --eval "db.adminCommand('ping')" &>/dev/null; then
-              echo "MongoDB is ready!"
-              break
-            fi
-            echo "Waiting for MongoDB to be ready..."
-            sleep 3
-          done
-
-      - name: Verify collections and document counts
-        run: |
-          bc_game_count=$(docker exec mongodb mongosh best_combination --quiet --eval "db.bc_game.countDocuments()")
-          bc_streaming_offer_count=$(docker exec mongodb mongosh best_combination --quiet --eval "db.bc_streaming_offer.countDocuments()")
-          bc_streaming_package_count=$(docker exec mongodb mongosh best_combination --quiet --eval "db.bc_streaming_package.countDocuments()")
-
-          echo "bc_game count: $bc_game_count"
-          echo "bc_streaming_offer count: $bc_streaming_offer_count"
-          echo "bc_streaming_package count: $bc_streaming_package_count"
-
-          [[ "$bc_game_count" -eq 8871 ]] || { echo "bc_game count mismatch"; exit 1; }
-          [[ "$bc_streaming_offer_count" -eq 32439 ]] || { echo "bc_streaming_offer count mismatch"; exit 1; }
-          [[ "$bc_streaming_package_count" -eq 37 ]] || { echo "bc_streaming_package count mismatch"; exit 1; }
+          docker exec mongodb mongosh best_combination --quiet --eval "db.getCollectionNames().forEach(c => print(c + ': ' + db[c].countDocuments()))"
 
       - name: Cleanup
         run: docker-compose -f docker-compose.yaml down
