@@ -33,5 +33,8 @@ jobs:
         run: |
           docker exec mongodb mongosh best_combination --quiet --eval "db.getCollectionNames().forEach(c => print(c + ': ' + db[c].countDocuments()))"
 
+      - name: Log MongoDB container
+        run: docker-compose logs mongodb
+
       - name: Cleanup
         run: docker-compose -f docker-compose.yaml down
