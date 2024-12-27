@@ -1,23 +1,22 @@
 [package]
-name = "libs"
+name = "best_combination_api"
 version = "0.1.0"
 edition = "2021"
 
-[lib]
-crate-type = ["lib"]
-bench = false
+[[bin]]
+name = "api-service"
+path = "src/main.rs"
 
 [dependencies]
+libs = { path = "../libs" }
 tokio = { version = "1.32.0", features = ["full"] }
 redis = { version = "0.27.3", features = ["tokio-comp"] }
-validator = { version = "0.19.0", features = ["derive"] }
+# validator = { version = "0.19.0", features = ["derive"] }
 # chrono = { version = "0.4.38", features = ["serde"] }
 serde = { version = "1.0.215", features = ["derive"] }
 serde_json = "1.0.133"
 lapin = "2.5.0"
-tokio-executor-trait = "2.1.3"
-tokio-reactor-trait = "1.1.0"
-regex = "1.11.1"
+# regex = "1.11.1"
 once_cell = "1.20.2"
 actix-web = "4"
 futures = "0.3.31"
@@ -29,13 +28,5 @@ async-graphql = "7.0.11"
 async-graphql-actix-web = "7.0.11"
 anyhow = "1.0.93"
 mongodb = "3.1.0"
-async-trait = "0.1.83"
-testcontainers = "0.23.1"
-
-[dev-dependencies]
-criterion = { version = "0.5.1", features = ["async_tokio"] }
-
-[[bench]]
-name = "mongo_preprocessing"
-bench = true
-harness = false
+envy = "0.4.2"
+# uuid = { version = "1.11.0", features = ["v5"] }
