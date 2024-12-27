@@ -52,12 +52,16 @@ function ensureIndex(collectionName, indexSpec, indexName) {
     }
 }
 
+ensureIndex("bc_game", { game_id: 1 }, "game_id_1");
 ensureIndex("bc_game", { team_home: 1, team_away: 1 }, "team_home_1_team_away_1");
 ensureIndex("bc_game", { tournament_name: 1 }, "tournament_name_1");
 ensureIndex("bc_streaming_offer", { game_id: 1 }, "game_id_1");
 ensureIndex("bc_streaming_offer", { streaming_package_id: 1 }, "streaming_package_id_1");
 ensureIndex("bc_streaming_package", { streaming_package_id: 1 }, "streaming_package_id_1");
 EOF
+
+
+echo "MongoDB setup completed"
 
 # Keep MongoDB running in the foreground
 tail -f /var/log/mongodb.log

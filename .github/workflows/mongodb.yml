@@ -29,9 +29,22 @@ jobs:
       - name: Start MongoDB with docker-compose
         run: docker-compose -f docker-compose.yaml up -d mongodb
 
-      - name: Log MongoDB collections and counts
+      - name: Wait for MongoDB initialization to complete
         run: |
-          docker exec mongodb mongosh best_combination --quiet --eval "db.getCollectionNames().forEach(c => print(c + ': ' + db[c].countDocuments()))"
+          for i in {1..20}; do
+            if docker logs mongodb 2>&1 | grep -q "MongoDB initialization complete"; then
+              echo "MongoDB initialization complete"
+              break
+            fi
+            echo "Waiting for MongoDB initialization to complete..."
+            sleep 5
+          done
+
+          # If the loop didn't break, fail the CI step
+          if ! docker logs mongodb 2>&1 | grep -q "Creating index for bc_streaming_package..."; then
+            echo "MongoDB did not complete initialization within the expected time."
+            exit 1
+          fi
 
       - name: Log MongoDB container
         run: docker-compose logs mongodb
