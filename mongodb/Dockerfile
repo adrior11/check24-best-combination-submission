@@ -14,6 +14,4 @@ COPY mongo_init.sh /app/mongo_init.sh
 
 RUN chmod +x /app/mongo_init.sh
 
-EXPOSE 27017
-
 CMD ["bash", "/app/mongo_init.sh"]
