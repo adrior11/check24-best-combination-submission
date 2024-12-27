@@ -61,7 +61,7 @@ ensureIndex("bc_streaming_package", { streaming_package_id: 1 }, "streaming_pack
 EOF
 
 
-echo "MongoDB setup completed"
+echo "MongoDB initialization complete"
 
 # Keep MongoDB running in the foreground
 tail -f /var/log/mongodb.log

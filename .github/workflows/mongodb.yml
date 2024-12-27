@@ -37,6 +37,7 @@ jobs:
               break
             fi
             echo "Waiting for MongoDB initialization to complete..."
+            docker-compose logs mongodb
             sleep 5
           done
 
@@ -45,9 +46,6 @@ jobs:
             echo "MongoDB did not complete initialization within the expected time."
             exit 1
           fi
-
-      - name: Log MongoDB container
-        run: docker-compose logs mongodb
 
       - name: Cleanup
         run: docker-compose -f docker-compose.yaml down
