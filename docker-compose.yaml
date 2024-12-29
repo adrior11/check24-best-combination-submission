@@ -127,13 +127,13 @@ services:
     restart: unless-stopped
 
   gateway:
-    image:
+    image: "ghcr.io/apollographql/router:v1.59.1-rc.0"
     container_name: gateway
     environment:
       APOLLO_ROUTER_SUPERGRAPH_PATH: /gateway/schema/supergraph.graphql
       APOLLO_ROUTER_CONFIG_PATH: /gateway/config/router.yaml
       APOLLO_ROUTER_LOG: debug
-      APOLLO_TELEMETRY_DISABLED: true
+      APOLLO_TELEMETRY_DISABLED: "true"
     volumes:
       - ./apps/gateway/supergraph.graphql:/gateway/schema/supergraph.graphql
       - ./apps/gateway/router.yaml:/gateway/config/router.yaml
