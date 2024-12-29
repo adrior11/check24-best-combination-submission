@@ -67,6 +67,9 @@ jobs:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           REDIS_URL: ${{ secrets.REDIS_URL }}
           RABBITMQ_URL: ${{ secrets.RABBITMQ_URL }}
+          TASK_QUEUE_NAME: ${{ secrets.TASK_QUEUE_NAME }}
+          API_SERVICE_PORT: ${{ secrets.API_SERVICE_PORT }}
+          DATA_FETCH_SERVICE_PORT: ${{ secrets.DATA_FETCH_SERVICE_PORT }}
           LOG_LEVEL: ${{ secrets.LOG_LEVEL }}
 
         run: cargo test --verbose -- --test-threads=1
@@ -77,5 +80,8 @@ jobs:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           REDIS_URL: ${{ secrets.REDIS_URL }}
           RABBITMQ_URL: ${{ secrets.RABBITMQ_URL }}
+          TASK_QUEUE_NAME: ${{ secrets.TASK_QUEUE_NAME }}
+          API_SERVICE_PORT: ${{ secrets.API_SERVICE_PORT }}
+          DATA_FETCH_SERVICE_PORT: ${{ secrets.DATA_FETCH_SERVICE_PORT }}
           LOG_LEVEL: ${{ secrets.LOG_LEVEL }}
         run: cargo test --release --verbose -- --test-threads=1
