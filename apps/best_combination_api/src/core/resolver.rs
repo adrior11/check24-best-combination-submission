@@ -4,12 +4,13 @@ use libs::models::fetch_types::{FetchOptions, FetchResult, FetchStatus};
 
 use super::service::{self, handle_request};
 
-pub type AppSchema = Schema<QueryRoot, MutationRoot, EmptySubscription>;
+pub type AppSchema = Schema<Query, Mutation, EmptySubscription>;
 
-pub struct QueryRoot;
+#[derive(Default)]
+pub struct Query;
 
 #[Object]
-impl QueryRoot {
+impl Query {
     async fn get_best_combination(
         &self,
         ctx: &Context<'_>,
@@ -21,11 +22,10 @@ impl QueryRoot {
     }
 }
 
-#[derive(Default)]
-pub struct MutationRoot;
+pub struct Mutation;
 
 #[Object]
-impl MutationRoot {
+impl Mutation {
     async fn enqueue_best_combination(
         &self,
         ctx: &Context<'_>,

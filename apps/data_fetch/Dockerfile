@@ -9,12 +9,12 @@ WORKDIR /usr/src/docker-build
 # Create empty project for caching dependencies
 RUN USER=root cargo init
 COPY apps/libs ../libs
-COPY apps/Cargo.lock apps/best_combination_data_fetch/Cargo.toml ./
+COPY apps/Cargo.lock apps/data_fetch/Cargo.toml ./
 
 # Cache dependencies
 RUN cargo install --path . --locked
 
-COPY apps/best_combination_data_fetch/ ./
+COPY apps/data_fetch/ ./
 RUN touch src/main.rs
 RUN cargo install --path . --locked
 

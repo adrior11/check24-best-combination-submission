@@ -6,7 +6,7 @@ use actix_web::{
 };
 use async_graphql::{EmptyMutation, EmptySubscription, Schema};
 
-use data_fetch::{QueryRoot, CONFIG};
+use data_fetch::{Query, CONFIG};
 use libs::{
     constants::{DATABASE_NAME, GAME_COLLECTION_NAME},
     db::{dao::GameDao, DocumentDatabaseConnector, MongoClient},
@@ -23,8 +23,9 @@ async fn main() -> io::Result<()> {
     let mongo_client = MongoClient::init(&CONFIG.mongodb_uri, DATABASE_NAME).await;
     let game_dao = GameDao::new(mongo_client.get_collection(GAME_COLLECTION_NAME));
 
-    let schema = Schema::build(QueryRoot, EmptyMutation, EmptySubscription)
+    let schema = Schema::build(Query, EmptyMutation, EmptySubscription)
         .data(Arc::new(game_dao))
+        .enable_federation()
         .finish();
 
     HttpServer::new(move || {
@@ -32,8 +33,7 @@ async fn main() -> io::Result<()> {
             .app_data(Data::new(schema.clone()))
             .app_data(Data::new(metrics::init_metrics()))
             .service(
-                // NOTE: Adjust path
-                web::resource("/graphql")
+                web::resource("/")
                     .route(web::post().to(data_fetch::index))
                     .route(web::get().to(data_fetch::index_playground)),
             )
@@ -41,8 +41,7 @@ async fn main() -> io::Result<()> {
             .wrap(logging::request_logger())
             .wrap(MetricsMiddleware)
     })
-    // NOTE: Adjust binding via .env
-    .bind("0.0.0.0:8002")?
+    .bind(format!("0.0.0.0:{}", &CONFIG.data_fetch_service_port))?
     .run()
     .await
 }

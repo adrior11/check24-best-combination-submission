@@ -2,4 +2,4 @@ mod config;
 mod core;
 
 pub use config::CONFIG;
-pub use core::{index, index_playground, QueryRoot};
+pub use core::{index, index_playground, Query};

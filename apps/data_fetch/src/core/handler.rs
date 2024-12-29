@@ -11,7 +11,5 @@ pub async fn index(schema: Data<AppSchema>, req: GraphQLRequest) -> GraphQLRespo
 pub async fn index_playground() -> HttpResponse {
     HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
-        .body(http::playground_source(GraphQLPlaygroundConfig::new(
-            "/graphql",
-        )))
+        .body(http::playground_source(GraphQLPlaygroundConfig::new("/")))
 }

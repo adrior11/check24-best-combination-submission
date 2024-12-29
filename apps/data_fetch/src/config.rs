@@ -4,6 +4,7 @@ use serde::Deserialize;
 #[derive(Clone, Deserialize, Debug)]
 pub struct Config {
     pub mongodb_uri: String,
+    pub data_fetch_service_port: String,
 }
 
 pub static CONFIG: Lazy<Config> = Lazy::new(|| {
