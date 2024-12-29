@@ -2,10 +2,10 @@ federation_version: =2.4.8
 
 subgraphs:
   api-service:
-    routing_url: http://localhost:8001
+    routing_url: http://api-service:8001
     schema:
-      subgraph_url: http://localhost:8001
+      subgraph_url: http://api-service:8001
   data-fetch-service:
-    routing_url: http://localhost:8002
+    routing_url: http://data-fetch-service:8002
     schema:
-      subgraph_url: http://localhost:8002
+      subgraph_url: http://data-fetch-service:8002

@@ -2,7 +2,7 @@
 FROM rust:latest AS builder 
 
 ENV CARGO_TERM_COLOR=always
-RUN apt-get update && apt-get install -y libpq-dev
+RUN apt-get update && apt-get install -y protobuf-compiler cmake
 
 WORKDIR /usr/src/docker-build
 
@@ -21,4 +21,5 @@ RUN cargo install --path . --locked
 FROM debian:bookworm-slim 
 RUN apt-get update && apt-get install -y libpq-dev curl
 COPY --from=builder /usr/local/cargo/bin/gateway-service /bin/
+RUN update-ca-certificates
 CMD ["gateway-service"]

@@ -63,8 +63,8 @@ enum FetchStatus
 scalar join__FieldSet
 
 enum join__Graph {
-  API_SERVICE @join__graph(name: "api-service", url: "http://localhost:8001")
-  DATA_FETCH_SERVICE @join__graph(name: "data-fetch-service", url: "http://localhost:8002")
+  API_SERVICE @join__graph(name: "api-service", url: "http://api-service:8001")
+  DATA_FETCH_SERVICE @join__graph(name: "data-fetch-service", url: "http://data-fetch-service:8002")
 }
 
 """A scalar that can represent any JSON Object value."""
