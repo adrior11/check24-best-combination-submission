@@ -3,5 +3,6 @@ resolver = "2"
 members = [ 
     "best_combination_api",
     "best_combination_worker",
+    "data_fetch",
     "libs",
 ]
