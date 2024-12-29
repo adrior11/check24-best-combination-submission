@@ -3,7 +3,7 @@ POST {{API_URL}}/graphql
 Content-Type: application/json
 
 {
-  "query": "query GetBestCombination($teams: [String!]!, $opts: FetchOptions) { getBestCombination(teams: $teams, opts: $opts) { status data { packages combinedMonthlyPriceCents combinedMonthlyPriceYearlySubscriptionInCents coverage } } }",
+  "query": "query GetBestCombination($teams: [String!]!, $opts: FetchOptions) { getBestCombination(teams: $teams, opts: $opts) { status data { packages { id coverage monthlyPriceCents monthlyPriceYearlySubscriptionInCents } combinedMonthlyPriceCents combinedMonthlyPriceYearlySubscriptionInCents combinedCoverage } } }",
   "variables": {
     "teams": ["Deutschland", "FC Barcelona", "Frankreich", "FC Salzburg", "RB Leipzig"],
     "opts": {
@@ -11,3 +11,70 @@ Content-Type: application/json
     }
   }
 }
+
+###
+# @title Enqueue Best Combination
+POST {{API_URL}}/graphql
+Content-Type: application/json
+
+{
+  "query": "mutation EnqueueBestCombination($teams: [String!], $tournaments: [String!], $opts: FetchOptions!) { enqueueBestCombination(teams: $teams, tournaments: $tournaments, opts: $opts) }",
+  "variables": {
+    "teams": ["Deutschland", "Frankreich", "FC Salzburg", "RB Leipzig"],
+    "tournaments": ["Bundeslige 23/24"],
+    "opts": {
+      "limit": 3
+    }
+  }
+}
+
+HTTP/1.1 200  - OK
+content-length: 43
+connection: close
+content-type: application/json
+date: Sun, 29 Dec 2024 13:12:24 GMT
+###
+# @title Get Teams
+POST {{DATA_FETCH_URL}}/graphql
+Content-Type: application/json
+
+{
+  "query": "query GetTeams { getTeams }"
+}
+
+HTTP/1.1 200  - OK
+content-length: 15914
+connection: close
+content-type: application/json
+date: Sun, 29 Dec 2024 13:18:01 GMT
+###
+# @title Get Tournaments
+POST {{DATA_FETCH_URL}}/graphql
+Content-Type: application/json
+
+{
+  "query": "query GetTournaments { getTournaments }"
+}
+
+HTTP/1.1 200  - OK
+content-length: 932
+connection: close
+content-type: application/json
+date: Sun, 29 Dec 2024 13:17:58 GMT
+###
+# @title Get Suggestion
+POST {{DATA_FETCH_URL}}/graphql
+Content-Type: application/json
+
+{
+  "query": "query GetSuggestion($input: String!) { getSuggestion(input: $input) }",
+  "variables": {
+    "input": "Deutsch"
+  }
+}
+
+HTTP/1.1 200  - OK
+content-length: 40
+connection: close
+content-type: application/json
+date: Sun, 29 Dec 2024 13:17:55 GMT
