@@ -2,6 +2,8 @@
 name = "gateway"
 version = "0.1.0"
 edition = "2021"
+authors = ["Adrian Schneider <adrian.schneider11@icloud.com>"]
+repository = "https://github.com/adrior11/check24-best-combination-submission"
 
 [[bin]]
 name = "gateway-service"
