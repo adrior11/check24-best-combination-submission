@@ -14,11 +14,10 @@ impl Query {
     async fn get_best_combination(
         &self,
         ctx: &Context<'_>,
-        teams: Option<Vec<String>>,
-        tournaments: Option<Vec<String>>,
+        input: Vec<String>,
         opts: FetchOptions,
     ) -> async_graphql::Result<FetchResult> {
-        service::handle_request(ctx, teams, tournaments, opts).await
+        service::handle_request(ctx, input, opts).await
     }
 }
 
@@ -29,11 +28,10 @@ impl Mutation {
     async fn enqueue_best_combination(
         &self,
         ctx: &Context<'_>,
-        teams: Option<Vec<String>>,
-        tournaments: Option<Vec<String>>,
+        input: Vec<String>,
         opts: FetchOptions,
     ) -> async_graphql::Result<FetchStatus> {
-        let result = handle_request(ctx, teams, tournaments, opts).await?;
+        let result = handle_request(ctx, input, opts).await?;
         Ok(result.status)
     }
 }

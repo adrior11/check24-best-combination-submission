@@ -2,7 +2,6 @@ mod documents;
 mod game_dao;
 mod streaming_offer_dao;
 mod streaming_package_dao;
-mod util;
 
 pub use game_dao::GameDao;
 pub use streaming_offer_dao::StreamingOfferDao;

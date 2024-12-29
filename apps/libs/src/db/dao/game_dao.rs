@@ -2,7 +2,7 @@ use anyhow::Context;
 use futures::stream::TryStreamExt;
 use mongodb::{bson, Collection};
 
-use super::{documents, util};
+use super::documents;
 use crate::models::schemas::GameSchema;
 
 pub struct GameDao {
@@ -88,23 +88,8 @@ impl GameDao {
         Ok(games)
     }
 
-    pub async fn aggregate_game_ids(
-        &self,
-        teams: Option<Vec<String>>,
-        tournaments: Option<Vec<String>>,
-    ) -> anyhow::Result<Vec<usize>> {
-        let match_query = util::build_match_query(teams, tournaments);
-
-        // Return an empty array, if no input has been provided
-        if match_query.is_none() {
-            return Ok(vec![]);
-        }
-
-        let pipeline = vec![
-            bson::doc! { "$match": match_query.unwrap() },
-            documents::project_game_id(),
-        ];
-
+    pub async fn aggregate_game_ids(&self, input: Vec<String>) -> anyhow::Result<Vec<usize>> {
+        let pipeline = documents::aggregate_game_ids_pipeline(&input);
         let mut cursor = self.collection.aggregate(pipeline).await?;
         let mut game_ids = Vec::new();
 
@@ -224,7 +209,7 @@ mod tests {
         let mongo_client = MongoClient::init(&uri, DATABASE_NAME).await;
         let game_dao = GameDao::new(mongo_client.get_collection(GAME_COLLECTION_NAME));
 
-        let game_ids = game_dao.aggregate_game_ids(None, None).await.unwrap();
+        let game_ids = game_dao.aggregate_game_ids(vec![]).await.unwrap();
         assert!(game_ids.is_empty());
     }
 
@@ -236,10 +221,7 @@ mod tests {
         let game_dao = GameDao::new(mongo_client.get_collection(GAME_COLLECTION_NAME));
 
         let teams = vec!["Bayern München".to_string()];
-        let mut game_ids = game_dao
-            .aggregate_game_ids(Some(teams), None)
-            .await
-            .unwrap();
+        let mut game_ids = game_dao.aggregate_game_ids(teams).await.unwrap();
         let mut expected = vec![
             52, 69, 76, 79, 103, 89, 113, 121, 125, 139, 146, 151, 161, 171, 186, 193, 196, 212,
             214, 219, 225, 240, 251, 257, 261, 272, 284, 293, 307, 320, 302, 325, 337, 349, 356,
@@ -265,10 +247,7 @@ mod tests {
         let game_dao = GameDao::new(mongo_client.get_collection(GAME_COLLECTION_NAME));
 
         let tournaments = vec!["Europameisterschaft 2024".to_string()];
-        let mut game_ids = game_dao
-            .aggregate_game_ids(None, Some(tournaments))
-            .await
-            .unwrap();
+        let mut game_ids = game_dao.aggregate_game_ids(tournaments).await.unwrap();
         let mut expected = vec![
             1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
             25, 26, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 27, 48,
@@ -290,12 +269,11 @@ mod tests {
         let mongo_client = MongoClient::init(&uri, DATABASE_NAME).await;
         let game_dao = GameDao::new(mongo_client.get_collection(GAME_COLLECTION_NAME));
 
-        let teams = vec!["Bayern München".to_string()];
-        let tournaments = vec!["Europameisterschaft 2024".to_string()];
-        let mut game_ids = game_dao
-            .aggregate_game_ids(Some(teams), Some(tournaments))
-            .await
-            .unwrap();
+        let input = vec![
+            "Bayern München".to_string(),
+            "Europameisterschaft 2024".to_string(),
+        ];
+        let mut game_ids = game_dao.aggregate_game_ids(input).await.unwrap();
         let mut expected = vec![
             1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
             25, 26, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 27, 48,

@@ -15,10 +15,6 @@ pub fn filter_tournaments(tournaments: &[String]) -> Document {
     }
 }
 
-pub fn project_game_id() -> Document {
-    doc! { "$project": { "game_id": 1, "_id": 0 } }
-}
-
 pub fn aggregate_teams_pipeline() -> Vec<Document> {
     vec![
         doc! {
@@ -71,6 +67,38 @@ pub fn aggregate_tournaments_pipeline() -> Vec<Document> {
             "$project": doc! {
                 "_id": 0,
                 "tournaments": 1
+            }
+        },
+    ]
+}
+
+pub fn aggregate_game_ids_pipeline(input: &[String]) -> Vec<Document> {
+    vec![
+        doc! {
+            "$match": doc! {
+                "$or": [
+                    doc! {
+                        "team_away": doc! {
+                            "$in": input
+                        }
+                    },
+                    doc! {
+                        "team_home": doc! {
+                            "$in": input
+                        }
+                    },
+                    doc! {
+                        "tournament_name": doc! {
+                            "$in": input
+                        }
+                    }
+                ]
+            }
+        },
+        doc! {
+            "$project": doc! {
+                "_id": 0,
+                "game_id": 1
             }
         },
     ]

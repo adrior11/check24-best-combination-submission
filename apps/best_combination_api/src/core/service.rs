@@ -17,22 +17,19 @@ use crate::CONFIG;
 
 pub async fn handle_request(
     ctx: &Context<'_>,
-    teams: Option<Vec<String>>,
-    tournaments: Option<Vec<String>>,
+    input: Vec<String>,
     opts: FetchOptions,
 ) -> async_graphql::Result<FetchResult> {
     let game_dao = ctx.data::<Arc<GameDao>>()?;
     let redis_client = ctx.data::<Arc<RedisClient>>()?;
     let mq_channel = ctx.data::<Arc<MqChannel>>()?;
 
-    let game_ids = game_dao
-        .aggregate_game_ids(teams.clone(), tournaments)
-        .await?;
+    let game_ids = game_dao.aggregate_game_ids(input.clone()).await?;
 
     if game_ids.is_empty() {
         return Err(Error::new(format!(
             "Unknown input: no matching games found for teams {:?}",
-            teams
+            input
         )));
     }
 
