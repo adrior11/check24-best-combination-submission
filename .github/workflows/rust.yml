@@ -16,6 +16,8 @@ jobs:
     strategy:
       matrix:
         rust: [stable, beta, nightly]
+        service: [best_combination_api, best_combination_worker, data_fetch, libs]
+      fail-fast: false
 
     steps:
       - uses: actions/checkout@v4
@@ -32,21 +34,21 @@ jobs:
         run: rustup component add rustfmt
 
       - name: Build
-        working-directory: ./backend
+        working-directory: ./apps/${{ matrix.service }}
         run: cargo build --verbose
       
       - name: Run Clippy (Linting)
-        working-directory: ./backend
+        working-directory: ./apps/${{ matrix.service }}
         run: cargo clippy -- -D warnings
 
       - name: Check Code Formatting
-        working-directory: ./backend
+        working-directory: ./apps/${{ matrix.service }}
         run: cargo fmt --all --check
 
       - name: Run Tests
-        working-directory: ./backend
+        working-directory: ./apps/${{ matrix.service }}
         run: cargo test --verbose -- --test-threads=1
 
       - name: Run Tests in Release Mode
-        working-directory: ./backend
+        working-directory: ./apps/${{ matrix.service }}
         run: cargo test --release --verbose -- --test-threads=1
