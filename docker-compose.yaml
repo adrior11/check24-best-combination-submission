@@ -120,8 +120,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5000:5000"
-    # environment:
-      # BACKEND_URL: ${BACKEND_URL}
+    environment:
+      APOLLO_URL: ${APOLLO_URL}
     networks:
       - app-network
     restart: unless-stopped
@@ -141,6 +141,7 @@ services:
       - ./apps/gateway/router.yaml:/gateway/config/router.yaml
     depends_on:
       - api-service
+      - worker-service
       - data-fetch-service
     restart: unless-stopped
     networks:

@@ -88,14 +88,14 @@ enum link__Purpose {
 type Mutation
   @join__type(graph: API_SERVICE)
 {
-  enqueueBestCombination(teams: [String!], tournaments: [String!], opts: FetchOptions!): FetchStatus!
+  enqueueBestCombination(input: [String!]!, opts: FetchOptions!): FetchStatus!
 }
 
 type Query
   @join__type(graph: API_SERVICE)
   @join__type(graph: DATA_FETCH_SERVICE)
 {
-  getBestCombination(teams: [String!], tournaments: [String!], opts: FetchOptions!): FetchResult! @join__field(graph: API_SERVICE)
+  getBestCombination(input: [String!]!, opts: FetchOptions!): FetchResult! @join__field(graph: API_SERVICE)
   getTeams: [String!]! @join__field(graph: DATA_FETCH_SERVICE)
   getTournaments: [String!]! @join__field(graph: DATA_FETCH_SERVICE)
   getSuggestion(input: String!): String @join__field(graph: DATA_FETCH_SERVICE)
