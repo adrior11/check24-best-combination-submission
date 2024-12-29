@@ -65,10 +65,17 @@ jobs:
         working-directory: ./apps/${{ matrix.service }}
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+          RABBITMQ_URL: ${{ secrets.RABBITMQ_URL }}
+          LOG_LEVEL: ${{ secrets.LOG_LEVEL }}
+
         run: cargo test --verbose -- --test-threads=1
 
       - name: Run Tests in Release Mode
         working-directory: ./apps/${{ matrix.service }}
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+          RABBITMQ_URL: ${{ secrets.RABBITMQ_URL }}
+          LOG_LEVEL: ${{ secrets.LOG_LEVEL }}
         run: cargo test --release --verbose -- --test-threads=1
