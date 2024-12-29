@@ -63,8 +63,12 @@ jobs:
 
       - name: Run Tests
         working-directory: ./apps/${{ matrix.service }}
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
         run: cargo test --verbose -- --test-threads=1
 
       - name: Run Tests in Release Mode
         working-directory: ./apps/${{ matrix.service }}
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
         run: cargo test --release --verbose -- --test-threads=1
