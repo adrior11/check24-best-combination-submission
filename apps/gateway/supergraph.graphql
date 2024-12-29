@@ -1,0 +1,102 @@
+schema
+  @link(url: "https://specs.apollo.dev/link/v1.0")
+  @link(url: "https://specs.apollo.dev/join/v0.3", for: EXECUTION)
+{
+  query: Query
+  mutation: Mutation
+}
+
+directive @join__enumValue(graph: join__Graph!) repeatable on ENUM_VALUE
+
+directive @join__field(graph: join__Graph, requires: join__FieldSet, provides: join__FieldSet, type: String, external: Boolean, override: String, usedOverridden: Boolean) repeatable on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+
+directive @join__graph(name: String!, url: String!) on ENUM_VALUE
+
+directive @join__implements(graph: join__Graph!, interface: String!) repeatable on OBJECT | INTERFACE
+
+directive @join__type(graph: join__Graph!, key: join__FieldSet, extension: Boolean! = false, resolvable: Boolean! = true, isInterfaceObject: Boolean! = false) repeatable on OBJECT | INTERFACE | UNION | ENUM | INPUT_OBJECT | SCALAR
+
+directive @join__unionMember(graph: join__Graph!, member: String!) repeatable on UNION
+
+directive @link(url: String, as: String, for: link__Purpose, import: [link__Import]) repeatable on SCHEMA
+
+type BestCombinationDto
+  @join__type(graph: API_SERVICE)
+{
+  packages: [BestCombinationPackageDto!]!
+  combinedMonthlyPriceCents: Int!
+  combinedMonthlyPriceYearlySubscriptionInCents: Int!
+  combinedCoverage: Int!
+}
+
+type BestCombinationPackageDto
+  @join__type(graph: API_SERVICE)
+{
+  id: Int!
+  coverage: JSONObject!
+  monthlyPriceCents: Int
+  monthlyPriceYearlySubscriptionInCents: Int!
+}
+
+input FetchOptions
+  @join__type(graph: API_SERVICE)
+{
+  limit: Int! = 1
+}
+
+type FetchResult
+  @join__type(graph: API_SERVICE)
+{
+  status: FetchStatus!
+  ids: [Int!]!
+  data: [BestCombinationDto!]
+}
+
+enum FetchStatus
+  @join__type(graph: API_SERVICE)
+{
+  READY @join__enumValue(graph: API_SERVICE)
+  PROCESSING @join__enumValue(graph: API_SERVICE)
+  ERROR @join__enumValue(graph: API_SERVICE)
+}
+
+scalar join__FieldSet
+
+enum join__Graph {
+  API_SERVICE @join__graph(name: "api-service", url: "http://localhost:8001")
+  DATA_FETCH_SERVICE @join__graph(name: "data-fetch-service", url: "http://localhost:8002")
+}
+
+"""A scalar that can represent any JSON Object value."""
+scalar JSONObject
+  @join__type(graph: API_SERVICE)
+
+scalar link__Import
+
+enum link__Purpose {
+  """
+  `SECURITY` features provide metadata necessary to securely resolve fields.
+  """
+  SECURITY
+
+  """
+  `EXECUTION` features provide metadata necessary for operation execution.
+  """
+  EXECUTION
+}
+
+type Mutation
+  @join__type(graph: API_SERVICE)
+{
+  enqueueBestCombination(teams: [String!], tournaments: [String!], opts: FetchOptions!): FetchStatus!
+}
+
+type Query
+  @join__type(graph: API_SERVICE)
+  @join__type(graph: DATA_FETCH_SERVICE)
+{
+  getBestCombination(teams: [String!], tournaments: [String!], opts: FetchOptions!): FetchResult! @join__field(graph: API_SERVICE)
+  getTeams: [String!]! @join__field(graph: DATA_FETCH_SERVICE)
+  getTournaments: [String!]! @join__field(graph: DATA_FETCH_SERVICE)
+  getSuggestion(input: String!): String @join__field(graph: DATA_FETCH_SERVICE)
+}

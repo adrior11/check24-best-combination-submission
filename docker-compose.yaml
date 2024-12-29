@@ -47,7 +47,7 @@ services:
   api-service:
     container_name: api-service
     ports:
-      - "8000:8000"
+      - "8001:8001"
     build:
       context: .
       dockerfile: ./apps/best_combination_api/Dockerfile
@@ -56,6 +56,7 @@ services:
       REDIS_URL: ${REDIS_URL_INTERNAL}
       RABBITMQ_URL: ${RABBITMQ_URL_INTERNAL}
       TASK_QUEUE_NAME: ${TASK_QUEUE_NAME}
+      API_SERVICE_PORT: ${API_SERVICE_PORT}
       LOG_LEVEL: ${LOG_LEVEL}
     networks:
       - app-network
@@ -93,18 +94,54 @@ services:
         condition: service_started
     restart: unless-stopped 
 
+    
+  data-fetch-service:
+    container_name: data-fetch-service
+    ports:
+      - "8002:8002"
+    build:
+      context: .
+      dockerfile: ./apps/data_fetch/Dockerfile
+    environment:
+      MONGODB_URI: ${MONGODB_URI_INTERNAL}
+      API_SERVICE_PORT: ${API_SERVICE_PORT}
+      LOG_LEVEL: ${LOG_LEVEL}
+    networks:
+      - app-network
+    depends_on:
+      mongodb:
+        condition: service_started
+    restart: unless-stopped
+
   frontend:
     container_name: frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "5000:5000"
     environment:
       BACKEND_URL: ${BACKEND_URL}
     networks:
       - app-network
     restart: unless-stopped
+
+  gateway:
+    image:
+    container_name: gateway
+    environment:
+      APOLLO_ROUTER_SUPERGRAPH_PATH: /gateway/schema/supergraph.graphql
+      APOLLO_ROUTER_CONFIG_PATH: /gateway/config/router.yaml
+      APOLLO_ROUTER_LOG: debug
+      APOLLO_TELEMETRY_DISABLED: true
+    volumes:
+      - ./apps/gateway/supergraph.graphql:/gateway/schema/supergraph.graphql
+      - ./apps/gateway/router.yaml:/gateway/config/router.yaml
+    depends_on:
+      - api-service
+      - data-fetch-service
+    restart: unless-stopped
+
 
   prometheus:
     image: prom/prometheus:latest
