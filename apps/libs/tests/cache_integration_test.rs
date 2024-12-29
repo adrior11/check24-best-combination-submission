@@ -9,6 +9,7 @@ use libs::{
     testing,
 };
 
+#[ignore = "CI needs testcontainer configuration in shell"]
 #[tokio::test]
 async fn test_int_cache() -> anyhow::Result<()> {
     dotenv::dotenv().ok();

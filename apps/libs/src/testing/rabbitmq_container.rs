@@ -26,6 +26,7 @@ mod tests {
     use super::*;
     use crate::messaging;
 
+    #[ignore = "CI needs testcontainer configuration in shell"]
     #[tokio::test]
     async fn test_rabbitmq_container_setup() {
         let queue_name = "TEST";
