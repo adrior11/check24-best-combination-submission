@@ -4,9 +4,9 @@ use actix_web::{
     web::{self, Data},
     App, HttpServer,
 };
-use async_graphql::{EmptyMutation, EmptySubscription, Schema};
+use async_graphql::{EmptySubscription, Schema};
 
-use best_combination_api::{QueryRoot, CONFIG};
+use best_combination_api::{MutationRoot, QueryRoot, CONFIG};
 use libs::{
     caching,
     constants::{DATABASE_NAME, GAME_COLLECTION_NAME},
@@ -31,7 +31,7 @@ async fn main() -> io::Result<()> {
     let mongo_client = MongoClient::init(&CONFIG.mongodb_uri, DATABASE_NAME).await;
     let game_dao = GameDao::new(mongo_client.get_collection(GAME_COLLECTION_NAME));
 
-    let schema = Schema::build(QueryRoot, EmptyMutation, EmptySubscription)
+    let schema = Schema::build(QueryRoot, MutationRoot, EmptySubscription)
         .data(Arc::new(mq_channel.clone()))
         .data(Arc::new(redis_client.clone()))
         .data(Arc::new(game_dao))
@@ -42,6 +42,7 @@ async fn main() -> io::Result<()> {
             .app_data(Data::new(schema.clone()))
             .app_data(Data::new(metrics::init_metrics()))
             .service(
+                // NOTE: Adjust path
                 web::resource("/graphql")
                     .route(web::post().to(best_combination_api::index))
                     .route(web::get().to(best_combination_api::index_playground)),
@@ -50,9 +51,10 @@ async fn main() -> io::Result<()> {
             .wrap(logging::request_logger())
             .wrap(MetricsMiddleware)
     })
+    // NOTE: Adjust binding via .env
     .bind("0.0.0.0:8000")?
     .run()
     .await
 
-    // TODO: Graceful shutdown
+    // FIX: Graceful shutdown of lapin (RabbitMQ) via tokio
 }
