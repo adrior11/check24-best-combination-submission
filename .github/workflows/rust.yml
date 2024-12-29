@@ -71,8 +71,7 @@ jobs:
           API_SERVICE_PORT: ${{ secrets.API_SERVICE_PORT }}
           DATA_FETCH_SERVICE_PORT: ${{ secrets.DATA_FETCH_SERVICE_PORT }}
           LOG_LEVEL: ${{ secrets.LOG_LEVEL }}
-
-        run: cargo test --verbose -- --test-threads=1
+        run: cargo test --verbose
 
       - name: Run Tests in Release Mode
         working-directory: ./apps/${{ matrix.service }}
