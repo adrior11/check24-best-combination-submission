@@ -46,6 +46,31 @@ impl GameDao {
         Ok(Vec::new())
     }
 
+    pub async fn get_suggestion(&self, input: String) -> anyhow::Result<Option<String>> {
+        let regex = format!("^{}", regex::escape(&input));
+        let filter = bson::doc! {
+            "$or": [
+                { "team_home": { "$regex": &regex, "$options": "i" } },
+                { "team_away": { "$regex": &regex, "$options": "i" } },
+                { "tournament_name": { "$regex": &regex, "$options": "i" } }
+            ]
+        };
+
+        if let Some(game) = self.collection.find_one(filter).await? {
+            // Determine the suggestion based on the input
+            let suggestion = if game.team_home.contains(&input) {
+                game.team_home
+            } else if game.team_away.contains(&input) {
+                game.team_away
+            } else {
+                game.tournament_name
+            };
+            Ok(Some(suggestion))
+        } else {
+            Ok(None)
+        }
+    }
+
     pub async fn find_games_by_teams(&self, teams: &[String]) -> anyhow::Result<Vec<GameSchema>> {
         let filter = documents::filter_teams(teams);
         let cursor = self.collection.find(filter).await?;
@@ -129,6 +154,36 @@ mod tests {
 
         assert!(!tournaments.is_empty());
         assert!(tournaments.len() == 43);
+    }
+
+    #[tokio::test]
+    async fn test_get_suggestion_teams() {
+        dotenv::dotenv().ok();
+        let uri = env::var("MONGODB_URI").expect("MONGODB_URI must be set in env");
+        let mongo_client = MongoClient::init(&uri, DATABASE_NAME).await;
+        let game_dao = GameDao::new(mongo_client.get_collection(GAME_COLLECTION_NAME));
+
+        let input = "Deutsch".to_string();
+        let suggestion = game_dao.get_suggestion(input).await.unwrap();
+        let expected = "Deutschland".to_string();
+
+        assert!(suggestion.is_some());
+        assert_eq!(suggestion.unwrap(), expected);
+    }
+
+    #[tokio::test]
+    async fn test_get_suggestion_tournaments() {
+        dotenv::dotenv().ok();
+        let uri = env::var("MONGODB_URI").expect("MONGODB_URI must be set in env");
+        let mongo_client = MongoClient::init(&uri, DATABASE_NAME).await;
+        let game_dao = GameDao::new(mongo_client.get_collection(GAME_COLLECTION_NAME));
+
+        let input = "Premier L".to_string();
+        let suggestion = game_dao.get_suggestion(input).await.unwrap();
+        let expected = "Premier League 24/25".to_string();
+
+        assert!(suggestion.is_some());
+        assert_eq!(suggestion.unwrap(), expected);
     }
 
     #[tokio::test]
