@@ -119,6 +119,11 @@ const AutocompleteSearch: React.FC = () => {
             }
         };
 
+        if (selectedItems.length === 0) {
+            alert('Please select at least one item.');
+            return;
+        }
+
         await fetchBestCombination();
     };
 
@@ -127,6 +132,13 @@ const AutocompleteSearch: React.FC = () => {
         if (!input.trim()) return;
 
         const finalValue = suggestion && suggestion.startsWith(input) ? suggestion : input;
+
+        // Prevent duplicates
+        if (selectedItems.includes(finalValue.trim())) {
+            setUserInput('');
+            setSuggestion('');
+            return;
+        }
 
         const updatedSelectedItems = [...selectedItems, finalValue.trim()];
         setSelectedItems(updatedSelectedItems);
@@ -203,73 +215,89 @@ const AutocompleteSearch: React.FC = () => {
     };
 
     return (
-        <div className="autocomplete-container">
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                {/* Input field */}
-                <input
-                    ref={inputRef}
-                    className="input-field"
-                    type="text"
-                    placeholder="Type something..."
-                    value={userInput}
-                    onChange={e => handleInputChange(e.target.value)}
-                    onKeyDown={e => {
-                        if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleFinalizeInput(userInput);
-                        }
-                    }}
-                    style={{ flex: 1 }} // Ensures the input takes available space
-                />
+        <div className="w-full max-w-2xl mx-auto p-4">
+            {/* Row that holds both the search box and the button */}
+            <div className="flex items-center gap-2">
+                {/* Search box container, grows to fill space */}
+                {/* className="items-center flex-1 h-10 gap-1 rounded-md border-2 border-border bg-background px-3 
+                text-text focus-within:border-primary transition-colors" */}
+                <div
+                    className="relative w-full h-10 gap-1 rounded-md border-2 border-border bg-background px-3 text-text focus-within:border-primary transition-colors"
+                    style={{ fontSize: '1rem' }}
+                >
+                    {/* Suggestion overlay */}
+                    {suggestion && suggestion.startsWith(userInput) && (
+                        <div className="absolute inset-0 flex items-center pointer-events-none px-3">
+                            <span className="text-gray-400">
+                                {/* Render the full suggestion */}
+                                <span>{userInput}</span>
+                                <span>{suggestion.substring(userInput.length)}</span>
+                            </span>
+                        </div>
+                    )}
 
-                {/* Button */}
-                <button onClick={handleButtonClick} style={{ marginLeft: '8px', padding: '8px 12px' }}>
-                    Fetch
+                    {/* Input field */}
+                    <input
+                        ref={inputRef}
+                        type="text"
+                        className="w-full bg-transparent outline-none text-left h-full z-10 relative caret-black"
+                        placeholder="Type something..."
+                        value={userInput}
+                        onChange={e => handleInputChange(e.target.value)}
+                        onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleFinalizeInput(userInput);
+                            }
+                        }}
+                    />
+                </div>
+                {/* Submission button, same height as the search box */}
+                <button
+                    onClick={handleButtonClick}
+                    className="
+          h-10
+          rounded-md
+          bg-primary
+          px-4
+          text-white
+          hover:opacity-90
+          transition-opacity
+          focus:outline-none
+          focus:ring-2
+          focus:ring-primary
+          focus:ring-offset-2
+        "
+                >
+                    Search
                 </button>
             </div>
 
-            {/* Ghost suggestion */}
-            <div className="suggestion-ghost">{suggestion && suggestion.startsWith(userInput) ? suggestion : ''}</div>
-
             {/* Selected items */}
-            <div className="selected-items">
+            <div className="mt-4 flex flex-wrap gap-2">
                 {selectedItems.map((item, index) => (
-                    <div key={index} className="selected-item" onClick={() => handleRemoveSelected(item)}>
+                    <div
+                        key={index}
+                        className="
+            flex items-center
+            gap-2
+            rounded-full
+            border border-current
+            bg-default
+            px-4 py-1
+            text-xs
+            tracking-tight
+            cursor-pointer
+          "
+                        onClick={() => handleRemoveSelected(item)}
+                    >
                         {item}
+                        <span className="text-text-offset hover:text-text">✕</span>
                     </div>
                 ))}
             </div>
 
-            <div className="best-combinations">
-                {bestCombinations?.data?.map((combination, index) => (
-                    <div key={index} className="combination">
-                        <h4>Combination {index + 1}</h4>
-                        <p>Coverage: {combination.combinedCoverage}%</p>
-                        <p>Monthly Price: ${(combination.combinedMonthlyPriceCents / 100).toFixed(2)}</p>
-                        <p>
-                            Yearly Subscription Price: $
-                            {(combination.combinedMonthlyPriceYearlySubscriptionInCents / 100).toFixed(2)}
-                        </p>
-                        <div className="packages">
-                            {combination.packages.map((pkg, pkgIndex) => (
-                                <div key={pkgIndex} className="package">
-                                    <h5>{pkg.name}</h5>
-                                    <p>Price: ${(pkg.monthlyPriceCents / 100).toFixed(2)}</p>
-                                    <p>Yearly Price: ${(pkg.monthlyPriceYearlySubscriptionInCents / 100).toFixed(2)}</p>
-                                    <div className="coverage">
-                                        <h6>Coverage:</h6>
-                                        {Object.entries(pkg.coverage).map(([competition, teams]) => (
-                                            <p key={competition}>
-                                                {competition}: {teams.join(', ')}
-                                            </p>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                ))}
-            </div>
+            {/* (Ignore Best Combination UI for now) */}
         </div>
     );
 };
