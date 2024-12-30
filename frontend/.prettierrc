@@ -17,6 +17,12 @@
             "options": {
                 "parser": "typescript"
             }
+        },
+        {
+            "files": "*.ts",
+            "options": {
+                "parser": "typescript"
+            }
         }
     ]
 }
