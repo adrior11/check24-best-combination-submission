@@ -47,8 +47,7 @@ interface CombinationCardProps {
 export const CombinationCard: React.FC<CombinationCardProps> = ({ combination, index }) => {
     const [isExpanded, setIsExpanded] = useState(false);
 
-    // In your example, each combination has multiple packages, each with coverage.
-    // We want a unique set of coverage “keys” across all packages to build our matrix row labels.
+    // Construct a unique set of coverage keys across all packages to build matrix row labels.
     const coverageKeys = Array.from(new Set(combination.packages.flatMap(pkg => Object.keys(pkg.coverage))));
 
     // Convert prices from cents to euros as needed
@@ -60,7 +59,6 @@ export const CombinationCard: React.FC<CombinationCardProps> = ({ combination, i
             {/* High-Level Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    {/* For example: "Combination #1 (2 packages)" */}
                     <h3 className="font-bold text-lg mb-1">
                         Combination #{index + 1} ({combination.packages.length} package
                         {combination.packages.length > 1 ? 's' : ''})
@@ -99,15 +97,12 @@ export const CombinationCard: React.FC<CombinationCardProps> = ({ combination, i
                         </thead>
                         <tbody>
                             {coverageKeys.map(key => {
-                                // We will place 2 indicators (live vs highlight) side by side
-                                // inside a single cell for each package
                                 return (
                                     <tr key={key} className="border-b last:border-none">
                                         <td className="p-2 border-gray-200">{key}</td>
 
                                         {combination.packages.map((pkg, i) => {
                                             const coverageArray = pkg.coverage[key];
-                                            // Typically coverageArray = [liveValue, highlightValue]
                                             const [liveValue, highlightValue] = coverageArray || [0, 0];
                                             return (
                                                 <td key={i} className="p-2 text-center border-gray-200">
