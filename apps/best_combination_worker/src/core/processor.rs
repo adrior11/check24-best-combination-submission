@@ -78,7 +78,7 @@ impl Processor {
             .aggregate_subsets_by_game_ids(&msg.game_ids)
             .await?;
 
-        log::info!("Performing best combination set cover algorithm...");
+        log::debug!("Performing best combination set cover algorithm...");
         let universe: BTreeSet<usize> = msg.game_ids.iter().copied().collect();
         let best_combinations = service::get_best_combinations(&universe, &subsets, msg.limit);
 
@@ -94,14 +94,14 @@ impl Processor {
             .basic_ack(delivery.delivery_tag, BasicAckOptions::default())
             .await?;
 
-        log::info!("Finished processing message");
+        log::debug!("Finished processing message");
 
         Ok(())
     }
 
     fn parse_message(&self, data: &[u8]) -> anyhow::Result<TaskMessagePayload> {
         let msg: TaskMessagePayload = serde_json::from_slice(data)?;
-        log::info!("Received job: {:?}", msg);
+        log::debug!("Received job: {:?}", msg);
         Ok(msg)
     }
 

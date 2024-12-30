@@ -27,6 +27,7 @@ pub async fn handle_request(
     let game_ids = game_dao.aggregate_game_ids(input.clone()).await?;
 
     if game_ids.is_empty() {
+        log::warn!("No matching games found for input: {:?}", input);
         return Err(Error::new(format!(
             "Unknown input: no matching games found for teams {:?}",
             input
@@ -72,6 +73,7 @@ pub async fn handle_request(
     let status = if job_enqueued {
         FetchStatus::Processing
     } else {
+        log::error!("Failed to enqueue job for payload: {:?}", payload);
         FetchStatus::Error
     };
 
