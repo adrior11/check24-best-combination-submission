@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { fetchGraphQL } from '../util/fetch-graphql';
 import { GET_SUGGESTION, GET_BEST_COMBINATION } from '../util/queries';
+import { ENQUEUE_BEST_COMBINATION } from '../util/mutations';
 
 interface Coverage {
     [key: string]: number[];
@@ -122,19 +123,78 @@ const AutocompleteSearch: React.FC = () => {
     };
 
     // Finalize input on "Enter" or selection
-    const handleFinalizeInput = (input: string) => {
+    const handleFinalizeInput = async (input: string) => {
         if (!input.trim()) return;
 
         const finalValue = suggestion && suggestion.startsWith(input) ? suggestion : input;
 
-        setSelectedItems(prev => [...prev, finalValue.trim()]);
+        const updatedSelectedItems = [...selectedItems, finalValue.trim()];
+        setSelectedItems(updatedSelectedItems);
         setUserInput('');
         setSuggestion('');
+
+        // Enqueue current selection via mutation
+        try {
+            const response = await fetch('http://localhost:8001/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    query: ENQUEUE_BEST_COMBINATION,
+                    variables: {
+                        input: updatedSelectedItems,
+                        opts: {
+                            limit: 1,
+                        },
+                    },
+                }),
+            });
+
+            const json = await response.json();
+            const result = json.data?.enqueueBestCombination;
+
+            if (result === 'ERROR') {
+                console.error('Failed to enqueue the best combination.');
+            }
+        } catch (error) {
+            console.error(`Mutation error: ${error}`);
+        }
     };
 
     // Remove selected item
-    const handleRemoveSelected = (item: string) => {
-        setSelectedItems(prev => prev.filter(i => i !== item));
+    const handleRemoveSelected = async (item: string) => {
+        // Update the selected items locally
+        const updatedSelectedItems = selectedItems.filter(i => i !== item);
+        setSelectedItems(updatedSelectedItems);
+
+        // Send the mutation to enqueue the updated selection
+        try {
+            const response = await fetch('http://localhost:8001/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    query: `
+                    mutation EnqueueBestCombination($input: [String!]!, $opts: FetchOptions!) {
+                      enqueueBestCombination(input: $input, opts: $opts)
+                    }
+                `,
+                    variables: {
+                        input: updatedSelectedItems,
+                        opts: {
+                            limit: 1,
+                        },
+                    },
+                }),
+            });
+
+            const json = await response.json();
+            const result = json.data?.enqueueBestCombination;
+
+            if (result === 'ERROR') {
+                console.error('Failed to enqueue the updated selection after removing an item.');
+            }
+        } catch (error) {
+            console.error(`Mutation error after removing an item: ${error}`);
+        }
     };
 
     // Handle input field change

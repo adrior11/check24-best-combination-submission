@@ -1,5 +1,3 @@
-export const backendUrl = import.meta.env.BACKEND_URL;
-
 export const GET_TEAMS = `
     query GetTeams {
         getTeams
