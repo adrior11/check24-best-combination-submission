@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 #[derive(InputObject, Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct FetchOptions {
     #[graphql(default = 1)]
+    #[graphql(validator(minimum = 1, maximum = 5))]
     pub limit: usize,
 }
 
