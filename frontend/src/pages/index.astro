@@ -1,10 +1,12 @@
 ---
 import '@fontsource-variable/inter';
+
 import Header from '../components/header.astro';
 import BestCombination from '../components/best-combination.astro';
+import Performance from '../components/performance.astro';
 import TechStack from '../components/tech-stack.astro';
-import About from '../components/about.astro';
 import Footer from '../components/footer.astro';
+
 import '../styles/index.css';
 
 const { generator } = Astro;
@@ -21,8 +23,6 @@ const description = '6th Check24 GenDev submission for the BestCombination chall
 
         <title>Best Combination</title>
         <meta name="description" content={description} />
-
-        <!-- github -->
 
         <!-- initialize theme -->
         <script is:inline>
@@ -48,8 +48,8 @@ const description = '6th Check24 GenDev submission for the BestCombination chall
         <Header />
         <div class="space-y-24 px-8 py-32">
             <BestCombination />
+            <Performance />
             <TechStack />
-            <About />
         </div>
         <Footer />
     </body>

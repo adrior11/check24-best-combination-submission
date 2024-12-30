@@ -3,3 +3,9 @@ export interface TechStackItem {
     title: string;
     url: string;
 }
+
+export interface PerformanceItem {
+    description: string;
+    icon: string;
+    title: string;
+}
