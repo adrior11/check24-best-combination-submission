@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
+
 import { fetchGraphQL } from '../util/fetch-graphql';
 import { GET_SUGGESTION, GET_BEST_COMBINATION } from '../util/queries';
 import { ENQUEUE_BEST_COMBINATION } from '../util/mutations';
+
+import { CombinationCard } from './combination-card';
 
 interface Coverage {
     [key: string]: number[];
@@ -50,18 +53,8 @@ const AutocompleteSearch: React.FC = () => {
 
         const fetchSuggestion = async () => {
             try {
-                // TODO: Replace with fetchGraphQL
-                const response = await fetch('http://localhost:8002/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        query: GET_SUGGESTION,
-                        variables: { input: userInput },
-                    }),
-                });
-
-                const json = await response.json();
-                setSuggestion(json.data?.getSuggestion ?? undefined);
+                const data = await fetchGraphQL<{ getSuggestion: string }>(GET_SUGGESTION, { input: userInput });
+                setSuggestion(data.getSuggestion ?? undefined);
             } catch (error) {
                 alert(`Failed to fetch suggestion: ${error}`);
                 setSuggestion(undefined);
@@ -298,6 +291,14 @@ const AutocompleteSearch: React.FC = () => {
             </div>
 
             {/* (Ignore Best Combination UI for now) */}
+            {bestCombinations?.data && (
+                <div className="mt-8">
+                    <h2 className="text-xl font-bold mb-4">Best Combinations</h2>
+                    {bestCombinations.data.map((combination, idx) => (
+                        <CombinationCard key={idx} combination={combination} index={idx} />
+                    ))}
+                </div>
+            )}
         </div>
     );
 };
