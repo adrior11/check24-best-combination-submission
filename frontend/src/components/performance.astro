@@ -1,0 +1,49 @@
+---
+import { Icon } from 'astro-icon/components';
+
+import type { PerformanceItem } from '../util/types.ts';
+
+import ContentSection from './content-section.astro';
+
+const items: Array<PerformanceItem> = [
+    {
+        title: 'Optimized Algorithm',
+        description:
+            'Benchmarked the base set cover algorithm to find the first best combinations in <5ms on worst case.',
+        icon: 'mdi:rocket',
+    },
+    {
+        title: 'Low API Latency',
+        description:
+            'Load tested with 95% of API requests completing in <90ms, with an average response time of <45ms and a >99.99% success rate across +10,000 requests.',
+        icon: 'mdi:cloud-sync',
+    },
+    {
+        title: 'Alternative Combinations',
+        description:
+            'Enhanced with enumeration and greedy backtracking to dynamically retrieve the best and next-best combinations.',
+        icon: 'mdi:routes',
+    },
+];
+---
+
+<ContentSection title="Performance" id="performance">
+    <Fragment slot="lead">
+        Designed with focus on consistency and speed, leveraging
+        <span class="text-primary">advanced algorithms</span> and <span class="text-primary">distributed services</span>
+        to handle complex queries with ease.
+    </Fragment>
+    <ul class="grid max-w-6xl grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        {
+            items.map(({ title, description, icon }) => (
+                <li class="flex flex-col items-center gap-4 border border-default bg-offset p-6">
+                    <div class="size-16 rounded-full border-2 border-current p-3">
+                        <Icon name={icon} class="size-full" />
+                    </div>
+                    <p class="text-center font-extrabold text-xl">{title}</p>
+                    <p class="text-center text-offset text-sm">{description}</p>
+                </li>
+            ))
+        }
+    </ul>
+</ContentSection>
