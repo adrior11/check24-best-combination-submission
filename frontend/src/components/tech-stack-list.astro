@@ -1,11 +1,10 @@
 ---
 import { Icon } from 'astro-icon/components';
-import type { TechStackItem } from '~/types';
+import type { TechStackItem } from '../util/types.ts';
 
 export interface Props {
     items: Array<TechStackItem>;
     title: string;
-    url: string;
 }
 
 const { items, title } = Astro.props;
