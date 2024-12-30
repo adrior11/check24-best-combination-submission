@@ -25,8 +25,5 @@ export default {
             },
         },
     },
-    corePlugins: {
-        fontSize: false,
-    },
     plugins: [],
 };
