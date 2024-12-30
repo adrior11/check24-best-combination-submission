@@ -12,9 +12,11 @@ jobs:
 
     steps:
       - name: Checkout code
+        working-directory: frontend
         uses: actions/checkout@v3
 
       - name: Set up Node.js
+        working-directory: frontend
         uses: actions/setup-node@v3
         with:
           node-version-file: '.nvmrc'
