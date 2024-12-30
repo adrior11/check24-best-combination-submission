@@ -29,15 +29,9 @@ export default function () {
   }
 
   const query = `
-    query GetBestCombination($teams: [String!]!, $opts: FetchOptions) {
-      getBestCombination(teams: $teams, opts: $opts) {
+    query GetBestCombination($input: [String!]!, $opts: FetchOptions!) {
+      getBestCombination(input: $input, opts: $opts) {
         status
-        data {
-          packages
-          combinedMonthlyPriceCents
-          combinedMonthlyPriceYearlySubscriptionInCents
-          coverage
-        }
       }
     }
   `;
@@ -45,7 +39,7 @@ export default function () {
   const limit = Math.floor(Math.random() * 3) + 1;
 
   const variables = {
-    teams: selectedTeams,
+    input: selectedTeams,
     opts: {
       limit: limit,
     },
@@ -62,7 +56,7 @@ export default function () {
     },
   };
 
-  const res = http.post("http://localhost:8000/graphql", payload, params);
+  const res = http.post("http://localhost:4000/", payload, params);
 
   check(res, {
     "status is 200": (r) => r.status === 200,
