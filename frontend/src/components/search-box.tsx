@@ -1,3 +1,4 @@
+// TODO: Refactor
 import React, { useState, useEffect, useRef } from 'react';
 
 import { fetchGraphQL } from '../util/fetch-graphql';
@@ -272,20 +273,20 @@ const AutocompleteSearch: React.FC = () => {
                     <div
                         key={index}
                         className="
-            flex items-center
-            gap-2
-            rounded-full
-            border border-current
-            bg-default
-            px-4 py-1
-            text-xs
-            tracking-tight
-            cursor-pointer
-          "
+                flex items-center
+                gap-2
+                rounded-full
+                border
+                bg-default
+                px-4 py-1
+                text-xs
+                tracking-tight
+                cursor-pointer
+                hover:line-through
+            "
                         onClick={() => handleRemoveSelected(item)}
                     >
                         {item}
-                        <span className="text-text-offset hover:text-text">✕</span>
                     </div>
                 ))}
             </div>
