@@ -13,8 +13,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          path: frontend
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -25,9 +23,9 @@ jobs:
         run: npm install -g pnpm
 
       - name: Install dependencies using pnpm
-        working-directory: frontend
+        working-directory: ./frontend
         run: pnpm install
 
       - name: Build project
-        working-directory: frontend
-        run: pnpm run frontend:build
+        working-directory: ./frontend
+        run: pnpm run build
