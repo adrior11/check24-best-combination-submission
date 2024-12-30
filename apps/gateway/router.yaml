@@ -7,3 +7,6 @@ sandbox:
 
 homepage:
   enabled: false
+
+cors:
+  allow_any_origin: true
