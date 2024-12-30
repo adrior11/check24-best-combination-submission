@@ -1,0 +1,22 @@
+---
+import ThemeSwitcher from '../components/theme-switcher.astro';
+---
+
+<header
+    id="page-header"
+    class="fixed z-20 flex w-full items-center justify-between bg-default px-8 py-4 text-default border-b border-default"
+>
+    <div class="flex items-center gap-3">
+        <h1 class="text-lg font-semibold">Best Combination</h1>
+    </div>
+
+    <div class="flex items-center gap-6">
+        <ThemeSwitcher />
+    </div>
+</header>
+
+<style>
+    #page-header {
+        @apply shadow-md;
+    }
+</style>
