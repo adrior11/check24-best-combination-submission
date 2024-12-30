@@ -25,6 +25,11 @@ const frameworks: Array<TechStackItem> = [
         url: 'https://redis.io',
     },
     {
+        title: 'RabbitMQ',
+        icon: 'tech-stack/rabbitmq-icon',
+        url: 'https://www.rabbitmq.com',
+    },
+    {
         title: 'Docker',
         icon: 'tech-stack/docker-icon',
         url: 'https://www.docker.com',
@@ -50,6 +55,11 @@ const frameworks: Array<TechStackItem> = [
         url: 'https://grafana.com',
     },
     {
+        title: 'Github',
+        icon: 'tech-stack/github-icon',
+        url: 'https://github.com',
+    },
+    {
         title: 'Astro',
         icon: 'tech-stack/astro-icon',
         url: 'https://astro.build',
@@ -58,6 +68,11 @@ const frameworks: Array<TechStackItem> = [
         title: 'React',
         icon: 'tech-stack/react',
         url: 'https://react.dev',
+    },
+    {
+        title: 'Tailwind CSS',
+        icon: 'tech-stack/tailwindcss-icon',
+        url: 'https://tailwindcss.com',
     },
 ];
 ---
@@ -68,5 +83,5 @@ const frameworks: Array<TechStackItem> = [
         <span class="text-primary">framework</span>
         and deploy to your favorite <span class="text-primary">platform</span>.
     </Fragment>
-    <TechStackList items={frameworks} title="Tech Stack" url="https://github.com/adrior11" />
+    <TechStackList items={frameworks} title="Tech Stack" />
 </ContentSection>
