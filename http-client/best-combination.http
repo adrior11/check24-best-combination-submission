@@ -3,29 +3,9 @@ POST {{API_URL}}/
 Content-Type: application/json
 
 {
-  "query": "query GetBestCombination($teams: [String!]!, $opts: FetchOptions) { getBestCombination(teams: $teams, opts: $opts) { status data { packages { id coverage monthlyPriceCents monthlyPriceYearlySubscriptionInCents } combinedMonthlyPriceCents combinedMonthlyPriceYearlySubscriptionInCents combinedCoverage } } }",
+  "query": "query GetBestCombination($input: [String!]!, $opts: FetchOptions) { getBestCombination(input: $input, opts: $opts) { ids status data { packages { id name coverage monthlyPriceCents monthlyPriceYearlySubscriptionInCents } combinedMonthlyPriceCents combinedMonthlyPriceYearlySubscriptionInCents combinedCoverage } } }",
   "variables": {
-    "teams": ["Deutschland", "FC Barcelona", "Frankreich", "FC Salzburg", "RB Leipzig"],
-    "opts": {
-      "limit": 3
-    }
-  }
-}
-
-HTTP/1.1 404  - Not Found
-content-length: 0
-connection: close
-date: Sun, 29 Dec 2024 19:04:38 GMT
-###
-# @title Enqueue Best Combination
-POST {{API_URL}}/
-Content-Type: application/json
-
-{
-  "query": "mutation EnqueueBestCombination($teams: [String!], $tournaments: [String!], $opts: FetchOptions!) { enqueueBestCombination(teams: $teams, tournaments: $tournaments, opts: $opts) }",
-  "variables": {
-    "teams": ["Deutschland", "Frankreich", "FC Salzburg", "RB Leipzig"],
-    "tournaments": ["Bundeslige 23/24"],
+    "input": ["Deutschland", "FC Barcelona", "Frankreich", "FC Salzburg", "RB Leipzig"],
     "opts": {
       "limit": 3
     }
@@ -33,10 +13,32 @@ Content-Type: application/json
 }
 
 HTTP/1.1 200  - OK
-content-length: 43
+content-length: 1058
 connection: close
 content-type: application/json
-date: Sun, 29 Dec 2024 13:12:24 GMT
+vary: Origin, Access-Control-Request-Method, Access-Control-Request-Headers
+date: Mon, 30 Dec 2024 21:03:42 GMT
+###
+# @title Enqueue Best Combination
+POST {{API_URL}}/
+Content-Type: application/json
+
+{
+  "query": "mutation EnqueueBestCombination($input: [String!], $opts: FetchOptions!) { enqueueBestCombination(input: $input, opts: $opts) }",
+  "variables": {
+    "input": ["Deutschland", "Frankreich", "FC Salzburg", "RB Leipzig"],
+    "opts": {
+      "limit": 3
+    }
+  }
+}
+
+HTTP/1.1 200  - OK
+content-length: 48
+connection: close
+vary: Origin, Access-Control-Request-Method, Access-Control-Request-Headers
+content-type: application/json
+date: Mon, 30 Dec 2024 21:04:23 GMT
 ###
 # @title Get Teams
 POST {{DATA_FETCH_URL}}/
@@ -45,12 +47,6 @@ Content-Type: application/json
 {
   "query": "query GetTeams { getTeams }"
 }
-
-HTTP/1.1 200  - OK
-content-length: 15914
-connection: close
-content-type: application/json
-date: Sun, 29 Dec 2024 19:07:33 GMT
 ###
 # @title Get Tournaments
 POST {{DATA_FETCH_URL}}
@@ -59,12 +55,6 @@ Content-Type: application/json
 {
   "query": "query GetTournaments { getTournaments }"
 }
-
-HTTP/1.1 200  - OK
-content-length: 932
-connection: close
-content-type: application/json
-date: Sun, 29 Dec 2024 19:07:18 GMT
 ###
 # @title Get Suggestion
 POST {{DATA_FETCH_URL}}
@@ -76,9 +66,3 @@ Content-Type: application/json
     "input": "Deutsch"
   }
 }
-
-HTTP/1.1 200  - OK
-content-length: 40
-connection: close
-content-type: application/json
-date: Sun, 29 Dec 2024 19:07:17 GMT
