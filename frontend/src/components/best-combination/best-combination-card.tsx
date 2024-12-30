@@ -1,4 +1,7 @@
+// TODO: Adjust Layout
 import React, { useState } from 'react';
+
+import type { BestCombination } from './types';
 
 // Helper function for coverage indicators
 const coverageIndicator = (value: number) => {
@@ -35,24 +38,6 @@ const coverageIndicator = (value: number) => {
             return <div />;
     }
 };
-
-interface Coverage {
-    [key: string]: number[];
-}
-
-interface Package {
-    name: string;
-    coverage: Coverage;
-    monthlyPriceCents: number | undefined;
-    monthlyPriceYearlySubscriptionInCents: number;
-}
-
-interface BestCombination {
-    combinedCoverage: number;
-    combinedMonthlyPriceCents: number;
-    combinedMonthlyPriceYearlySubscriptionInCents: number;
-    packages: Package[];
-}
 
 interface CombinationCardProps {
     combination: BestCombination;
