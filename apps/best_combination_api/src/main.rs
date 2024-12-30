@@ -1,5 +1,6 @@
 use std::{io, sync::Arc};
 
+use actix_cors::Cors;
 use actix_web::{
     web::{self, Data},
     App, HttpServer,
@@ -50,6 +51,12 @@ async fn main() -> io::Result<()> {
             .route("/metrics", web::get().to(metrics::metrics_handler))
             .wrap(logging::request_logger())
             .wrap(MetricsMiddleware)
+            .wrap(
+                Cors::default()
+                    .allow_any_origin()
+                    .allow_any_method()
+                    .allow_any_header(),
+            )
     })
     .bind(format!("0.0.0.0:{}", &CONFIG.api_service_port))?
     .run()
