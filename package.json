@@ -21,7 +21,8 @@
     "api:start": "cd apps && cargo run -p best_combination_api",
     "worker:start": "cd apps && cargo run -p best_combination_worker",
     "data-fetch:start": "cd apps && cargo run -p data-fetch",
-    "gateway:start": "cd apps && cargo run -p gateway"
+    "gateway:start": "cd apps && cargo run -p gateway",
+    "loadtest": "k6 run loadtests/loadtest.js"
   },
   "keywords": [],
   "author": "",

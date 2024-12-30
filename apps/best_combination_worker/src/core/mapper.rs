@@ -1,4 +1,3 @@
-// BUG: Map games with no monthly_price_cents should lead to Null combined
 use std::collections::{BTreeSet, HashMap};
 
 use libs::models::dtos::{
