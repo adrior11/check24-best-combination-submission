@@ -33,6 +33,7 @@ type BestCombinationPackageDto
   @join__type(graph: API_SERVICE)
 {
   id: Int!
+  name: String!
   coverage: JSONObject!
   monthlyPriceCents: Int
   monthlyPriceYearlySubscriptionInCents: Int!
