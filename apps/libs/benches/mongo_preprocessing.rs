@@ -1,4 +1,4 @@
-use std::{collections::BTreeSet, env, time::Duration};
+use std::{env, time::Duration};
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
@@ -16,9 +16,12 @@ async fn init_mongo_client() -> MongoClient {
 
 async fn preprocess_aggregation(
     package_dao: &StreamingPackageDao,
-    ids: &BTreeSet<usize>,
+    ids: &[usize],
 ) -> Vec<BestCombinationSubsetDto> {
-    package_dao.preprocess_subsets(ids).await.unwrap()
+    package_dao
+        .aggregate_subsets_by_game_ids(ids)
+        .await
+        .unwrap()
 }
 
 fn bench_mongo_preprocessing(c: &mut Criterion) {
@@ -35,7 +38,7 @@ fn bench_mongo_preprocessing(c: &mut Criterion) {
         let mongo_client = init_mongo_client().await;
         StreamingPackageDao::new(mongo_client.get_collection(STREAMING_PACKAGE_COLLECTION_NAME))
     });
-    let ids: BTreeSet<usize> = (1..=8876).collect();
+    let ids: Vec<usize> = (1..=8876).collect();
 
     group.bench_function("aggregation", |b| {
         b.to_async(&rt)
