@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 1,
+  "id": 3,
   "links": [],
   "panels": [
     {
@@ -69,7 +69,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -99,14 +100,18 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "11.3.0+security-01",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
+          "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "histogram_quantile(0.90, sum(rate(api_request_duration_seconds_bucket[1m])) by (le))",
+          "expr": "histogram_quantile(0.9, sum by(le) (rate(api_request_duration_seconds_bucket{job=\"data-fetch-service\"}[1m])))",
+          "fullMetaSearch": false,
+          "includeNullMetadata": true,
           "legendFormat": "__auto",
           "range": true,
-          "refId": "90th Percentile"
+          "refId": "90th Percentile",
+          "useBackend": false
         },
         {
           "datasource": {
@@ -114,7 +119,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "histogram_quantile(0.95, sum(rate(api_request_duration_seconds_bucket[1m])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(rate(api_request_duration_seconds_bucket{job=\"data-fetch-service\"}[1m])) by (le))",
           "hide": false,
           "instant": false,
           "legendFormat": "__auto",
@@ -127,7 +132,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "histogram_quantile(0.99, sum(rate(api_request_duration_seconds_bucket[1m])) by (le))",
+          "expr": "histogram_quantile(0.99, sum(rate(api_request_duration_seconds_bucket{job=\"data-fetch-service\"}[1m])) by (le))",
           "hide": false,
           "instant": false,
           "legendFormat": "__auto",
@@ -186,7 +191,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -217,11 +223,11 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "11.3.0+security-01",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "editorMode": "code",
-          "expr": "sum(rate(api_request_duration_seconds_sum[1m])) by (endpoint, method) /\nsum(rate(api_request_duration_seconds_count[1m])) by (endpoint, method)",
+          "expr": "sum(rate(api_request_duration_seconds_sum{job=\"data-fetch-service\"}[1m])) by (endpoint, method) /\nsum(rate(api_request_duration_seconds_count{job=\"data-fetch-service\"}[1m])) by (endpoint, method)",
           "legendFormat": "__auto",
           "range": true,
           "refId": "Average API Request Duration"
@@ -245,7 +251,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -280,11 +287,11 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.3.0+security-01",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "editorMode": "code",
-          "expr": "sum by (endpoint, method, status) (rate(api_errors_total[1m]))",
+          "expr": "sum by (endpoint, method, status) (rate(api_errors_total{job=\"data-fetch-service\"}[1m]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "API Errors per Second"
@@ -341,7 +348,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -371,7 +379,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "11.3.0+security-01",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -380,7 +388,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "sum by(endpoint, method, status) (rate(api_requests_total[1m]))",
+          "expr": "sum by(endpoint, method, status) (rate(api_requests_total{job=\"data-fetch-service\"}[1m]))",
           "fullMetaSearch": false,
           "hide": false,
           "includeNullMetadata": false,
@@ -407,8 +415,8 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "API Monitoring",
-  "uid": "ee5ilyf3e78cge",
-  "version": 9,
+  "title": "API Monitoring (data-fetch-service)",
+  "uid": "fe8ioh3spmosgd",
+  "version": 7,
   "weekStart": ""
 }
