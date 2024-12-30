@@ -5,4 +5,9 @@ scrape_configs:
   - job_name: "api-service"
     static_configs:
       - targets:
-          - "api-service:8000"
+          - "api-service:8001"
+  
+  - job_name: "data-fetch-service"
+    static_configs:
+      - targets:
+          - "data-fetch-service:8002"

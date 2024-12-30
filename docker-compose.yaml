@@ -159,6 +159,10 @@ services:
         condition: service_started
       worker-service:
         condition: service_started
+      data-fetch-service:
+        condition: service_started
+      gateway:
+        condition: service_started
     networks:
       - app-network
     restart: unless-stopped
