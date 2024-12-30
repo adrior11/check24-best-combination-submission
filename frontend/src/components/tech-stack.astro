@@ -1,0 +1,72 @@
+---
+import TechStackList from '../components/tech-stack-list.astro';
+import ContentSection from '../components/content-section.astro';
+
+export interface TechStackItem {
+    icon: string;
+    title: string;
+    url: string;
+}
+
+const frameworks: Array<TechStackItem> = [
+    {
+        title: 'Rust',
+        icon: 'tech-stack/rust',
+        url: 'https://www.rust-lang.org',
+    },
+    {
+        title: 'MongoDB',
+        icon: 'tech-stack/mongodb-icon',
+        url: 'https://www.mongodb.com',
+    },
+    {
+        title: 'Redis',
+        icon: 'tech-stack/redis',
+        url: 'https://redis.io',
+    },
+    {
+        title: 'Docker',
+        icon: 'tech-stack/docker-icon',
+        url: 'https://www.docker.com',
+    },
+    {
+        title: 'Apollo',
+        icon: 'tech-stack/apollostack',
+        url: 'https://www.apollographql.com',
+    },
+    {
+        title: 'GraphQL',
+        icon: 'tech-stack/graphql',
+        url: 'https://graphql.org',
+    },
+    {
+        title: 'Prometheus',
+        icon: 'tech-stack/prometheus',
+        url: 'https://prometheus.io',
+    },
+    {
+        title: 'Grafana',
+        icon: 'tech-stack/grafana',
+        url: 'https://grafana.com',
+    },
+    {
+        title: 'Astro',
+        icon: 'tech-stack/astro-icon',
+        url: 'https://astro.build',
+    },
+    {
+        title: 'React',
+        icon: 'tech-stack/react',
+        url: 'https://react.dev',
+    },
+];
+---
+
+<ContentSection title="Tech Stack" id="tech-stack">
+    <Fragment slot="lead">
+        Astro <span class="text-primary">plays nice</span>. Bring your own UI{' '}
+        <span class="text-primary">framework</span>
+        and deploy to your favorite <span class="text-primary">platform</span>.
+    </Fragment>
+    <TechStackList items={frameworks} title="Tech Stack" url="https://github.com/adrior11" />
+</ContentSection>
