@@ -1,16 +1,37 @@
 ---
-const backendUrl = import.meta.env.BACKEND_URL;
+import Layout from '../layouts/BaseLayout.astro';
+
+import Header from '../components/header.astro';
+import BestCombination from '../components/best-combination.astro';
+import SearchBox from '../components/search-box.tsx';
+import TechStack from '../components/tech-stack.astro';
+import About from '../components/about.astro';
+import Footer from '../components/footer.astro';
+
+import { GET_TEAMS, GET_TOURNAMENTS } from '../scripts/queries.ts';
+const description = '6th Check24 GenDev submission for the BestCombination challenge';
 ---
 
-<html lang="en">
+<!doctype html>
+<html lang="en" class="h-full motion-safe:scroll-smooth" data-theme="dark">
     <head>
         <meta charset="utf-8" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <meta name="viewport" content="width=device-width" />
         <meta name="generator" content={Astro.generator} />
-        <title>Astro</title>
+
+        <title>Best Combination</title>
+        <meta name="decription" content={description} />
     </head>
-    <body>
-        <h1>Astro</h1>
+    <body
+        class="h-full overflow-x-hidden bg-default text-default text-base selection:bg-secondary selection:text-white"
+    >
+        <Header />
+        <div class="space-y-24 px-8 py-32">
+            <SearchBox client:load />
+            <TechStack />
+            <About />
+        </div>
+        <Footer />
     </body>
 </html>
