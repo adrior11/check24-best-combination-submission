@@ -8,6 +8,7 @@ use crate::models::util::deserialize_optional_numeric_from_string;
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct BestCombinationSubsetDto {
     pub streaming_package_id: usize,
+    pub name: String,
     pub elements: BTreeSet<BestCombinationElementDto>,
     #[serde(deserialize_with = "deserialize_optional_numeric_from_string", default)]
     pub monthly_price_cents: Option<usize>,
@@ -17,12 +18,14 @@ pub struct BestCombinationSubsetDto {
 impl BestCombinationSubsetDto {
     pub fn new(
         streaming_package_id: usize,
+        name: &str,
         elements: BTreeSet<BestCombinationElementDto>,
         monthly_price_cents: Option<usize>,
         monthly_price_yearly_subscription_in_cents: usize,
     ) -> Self {
         BestCombinationSubsetDto {
             streaming_package_id,
+            name: name.to_string(),
             elements,
             monthly_price_cents,
             monthly_price_yearly_subscription_in_cents,
@@ -41,8 +44,9 @@ mod tests {
     #[test]
     fn test_deserialize_valid_number_as_string() {
         let json_data = r#"
-    {
-        "streaming_package_id": 1,
+        {
+            "streaming_package_id": 1,
+            "name": "TEST",
             "elements": [
                 {
                     "game_id": 1,
@@ -57,10 +61,10 @@ mod tests {
                     "highlights": 1
                 }
             ],
-        "monthly_price_cents": "999",
-        "monthly_price_yearly_subscription_in_cents": 11988
-    }
-    "#;
+            "monthly_price_cents": "999",
+            "monthly_price_yearly_subscription_in_cents": 11988
+        }
+        "#;
 
         let package: Result<BestCombinationSubsetDto, _> = serde_json::from_str(json_data);
         assert!(package.is_ok());
@@ -72,6 +76,7 @@ mod tests {
         let json_data = r#"
         {
             "streaming_package_id": 1,
+            "name": "TEST",
             "elements": [
                 {
                     "game_id": 1,
@@ -101,6 +106,7 @@ mod tests {
         let json_data = r#"
         {
             "streaming_package_id": 1,
+            "name": "TEST",
             "elements": [
                 {
                     "game_id": 1,
@@ -130,6 +136,7 @@ mod tests {
         let json_data = r#"
         {
             "streaming_package_id": 1,
+            "name": "TEST",
             "elements": [
                 {
                     "game_id": 1,
@@ -159,6 +166,7 @@ mod tests {
         let json_data = r#"
         {
             "streaming_package_id": 1,
+            "name": "TEST",
             "elements": [
                 {
                     "game_id": 1,
@@ -187,6 +195,7 @@ mod tests {
         let json_data = r#"
         {
             "streaming_package_id": 1,
+            "name": "TEST",
             "elements": [
                 {
                     "game_id": 1,

@@ -161,6 +161,7 @@ pub fn preprocess_subsets_pipeline(game_ids: &[u32]) -> Vec<Document> {
         doc! {
             "$project": doc! {
                 "_id": 0,
+                "name": 1,
                 "streaming_package_id": 1,
                 "monthly_price_cents": 1,
                 "monthly_price_yearly_subscription_in_cents": 1,

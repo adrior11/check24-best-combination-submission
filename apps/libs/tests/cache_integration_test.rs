@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use libs::{
     caching::{self, CacheValue, CompositeKey},
     models::{
@@ -18,31 +16,16 @@ async fn test_int_cache() -> anyhow::Result<()> {
     let redis_client = caching::init_redis(&url).await.unwrap();
 
     let key = CompositeKey::new(vec![1, 2, 3], FetchOptions::new(1));
-    let value = vec![BestCombinationDto {
-        packages: vec![
-            BestCombinationPackageDto {
-                id: 4,
-                coverage: HashMap::new(),
-                monthly_price_cents: Some(10),
-                monthly_price_yearly_subscription_in_cents: 10,
-            },
-            BestCombinationPackageDto {
-                id: 13,
-                coverage: HashMap::new(),
-                monthly_price_cents: Some(10),
-                monthly_price_yearly_subscription_in_cents: 10,
-            },
-            BestCombinationPackageDto {
-                id: 37,
-                coverage: HashMap::new(),
-                monthly_price_cents: Some(10),
-                monthly_price_yearly_subscription_in_cents: 10,
-            },
+    let value = vec![BestCombinationDto::new(
+        vec![
+            BestCombinationPackageDto::new(4, "P1", vec![], Some(10), 10),
+            BestCombinationPackageDto::new(13, "P2", vec![], Some(10), 10),
+            BestCombinationPackageDto::new(37, "P3", vec![], Some(10), 10),
         ],
-        combined_monthly_price_cents: 30,
-        combined_monthly_price_yearly_subscription_in_cents: 30,
-        combined_coverage: 99,
-    }];
+        30,
+        30,
+        99,
+    )];
 
     caching::cache_entry(&redis_client, &key, CacheValue::Data(value.clone()))
         .await

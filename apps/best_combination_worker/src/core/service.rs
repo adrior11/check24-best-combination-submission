@@ -217,6 +217,7 @@ mod tests {
         let universe = BTreeSet::new();
         let subsets = vec![BestCombinationSubsetDto::new(
             1,
+            "S1",
             BTreeSet::from([
                 BestCombinationElementDto::new(1, "", 1, 1),
                 BestCombinationElementDto::new(2, "", 1, 0),
@@ -248,6 +249,7 @@ mod tests {
         let universe = BTreeSet::from([1, 2, 3]);
         let subsets = vec![BestCombinationSubsetDto::new(
             1,
+            "S1",
             BTreeSet::from([
                 BestCombinationElementDto::new(1, "A", 1, 1),
                 BestCombinationElementDto::new(2, "B", 1, 0),
@@ -261,6 +263,7 @@ mod tests {
         let expected_cover = vec![BestCombinationDto::new(
             vec![BestCombinationPackageDto::new(
                 1,
+                "S1",
                 vec![("A", (2, 2)), ("B", (2, 0)), ("C", (0, 0))],
                 Some(10),
                 10,
@@ -279,12 +282,14 @@ mod tests {
         let subsets = vec![
             BestCombinationSubsetDto::new(
                 1,
+                "S1",
                 BTreeSet::from([BestCombinationElementDto::new(1, "", 1, 1)]),
                 Some(5),
                 10,
             ),
             BestCombinationSubsetDto::new(
                 2,
+                "S2",
                 BTreeSet::from([BestCombinationElementDto::new(2, "", 0, 0)]),
                 Some(5),
                 10,
@@ -295,8 +300,8 @@ mod tests {
 
         let expected_cover = vec![BestCombinationDto::new(
             vec![
-                BestCombinationPackageDto::new(1, vec![("", (2, 2))], Some(5), 10),
-                BestCombinationPackageDto::new(2, vec![("", (0, 0))], Some(5), 10),
+                BestCombinationPackageDto::new(1, "S1", vec![("", (2, 2))], Some(5), 10),
+                BestCombinationPackageDto::new(2, "S2", vec![("", (0, 0))], Some(5), 10),
             ],
             10,
             20,
@@ -315,12 +320,14 @@ mod tests {
         let subsets = vec![
             BestCombinationSubsetDto::new(
                 1,
+                "S1",
                 BTreeSet::from([BestCombinationElementDto::new(1, "", 1, 1)]),
                 Some(5),
                 10,
             ),
             BestCombinationSubsetDto::new(
                 1,
+                "S1",
                 BTreeSet::from([BestCombinationElementDto::new(1, "", 1, 1)]),
                 Some(5),
                 10,
@@ -331,6 +338,7 @@ mod tests {
         let expected_cover = vec![BestCombinationDto::new(
             vec![BestCombinationPackageDto::new(
                 1,
+                "S1",
                 vec![("", (2, 2))],
                 Some(5),
                 10,
@@ -353,18 +361,21 @@ mod tests {
         let subsets = vec![
             BestCombinationSubsetDto::new(
                 1,
+                "S1",
                 BTreeSet::from([BestCombinationElementDto::new(1, "", 1, 1)]),
                 Some(5),
                 5,
             ),
             BestCombinationSubsetDto::new(
                 2,
+                "S2",
                 BTreeSet::from([BestCombinationElementDto::new(1, "", 1, 1)]),
                 Some(5),
                 5,
             ),
             BestCombinationSubsetDto::new(
                 3,
+                "S3",
                 BTreeSet::from([BestCombinationElementDto::new(2, "", 1, 1)]),
                 Some(5),
                 5,
@@ -377,8 +388,8 @@ mod tests {
         let expected_cover = &[
             BestCombinationDto::new(
                 vec![
-                    BestCombinationPackageDto::new(1, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(3, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(1, "S1", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(3, "S3", vec![("", (2, 2))], Some(5), 5),
                 ],
                 10,
                 10,
@@ -386,8 +397,8 @@ mod tests {
             ),
             BestCombinationDto::new(
                 vec![
-                    BestCombinationPackageDto::new(2, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(3, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(2, "S2", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(3, "S3", vec![("", (2, 2))], Some(5), 5),
                 ],
                 10,
                 10,
@@ -404,6 +415,7 @@ mod tests {
         let subsets = vec![
             BestCombinationSubsetDto::new(
                 1,
+                "S1",
                 BTreeSet::from([
                     BestCombinationElementDto::new(1, "", 1, 1),
                     BestCombinationElementDto::new(2, "", 1, 1),
@@ -414,6 +426,7 @@ mod tests {
             ),
             BestCombinationSubsetDto::new(
                 2,
+                "S2",
                 BTreeSet::from([
                     BestCombinationElementDto::new(2, "", 1, 1),
                     BestCombinationElementDto::new(4, "", 1, 1),
@@ -424,6 +437,7 @@ mod tests {
             ),
             BestCombinationSubsetDto::new(
                 3,
+                "S3",
                 BTreeSet::from([
                     BestCombinationElementDto::new(3, "", 1, 1),
                     BestCombinationElementDto::new(6, "", 1, 1),
@@ -433,6 +447,7 @@ mod tests {
             ),
             BestCombinationSubsetDto::new(
                 4,
+                "S4",
                 BTreeSet::from([
                     BestCombinationElementDto::new(7, "", 1, 1),
                     BestCombinationElementDto::new(8, "", 1, 1),
@@ -442,6 +457,7 @@ mod tests {
             ),
             BestCombinationSubsetDto::new(
                 5,
+                "S5",
                 BTreeSet::from([
                     BestCombinationElementDto::new(9, "", 1, 1),
                     BestCombinationElementDto::new(10, "", 1, 1),
@@ -451,6 +467,7 @@ mod tests {
             ),
             BestCombinationSubsetDto::new(
                 6,
+                "S6",
                 BTreeSet::from([
                     BestCombinationElementDto::new(4, "", 1, 1),
                     BestCombinationElementDto::new(7, "", 1, 1),
@@ -460,6 +477,7 @@ mod tests {
             ),
             BestCombinationSubsetDto::new(
                 7,
+                "S7",
                 BTreeSet::from([
                     BestCombinationElementDto::new(5, "", 1, 1),
                     BestCombinationElementDto::new(8, "", 1, 1),
@@ -470,6 +488,7 @@ mod tests {
             ),
             BestCombinationSubsetDto::new(
                 8,
+                "S8",
                 BTreeSet::from([
                     BestCombinationElementDto::new(10, "", 1, 1),
                     BestCombinationElementDto::new(1, "", 1, 1),
@@ -483,11 +502,11 @@ mod tests {
         let expected_cover = &[
             BestCombinationDto::new(
                 vec![
-                    BestCombinationPackageDto::new(1, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(3, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(5, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(6, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(7, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(1, "S1", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(3, "S3", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(5, "S5", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(6, "S6", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(7, "S7", vec![("", (2, 2))], Some(5), 5),
                 ],
                 25,
                 25,
@@ -495,11 +514,11 @@ mod tests {
             ),
             BestCombinationDto::new(
                 vec![
-                    BestCombinationPackageDto::new(1, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(3, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(6, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(7, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(8, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(1, "S1", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(3, "S3", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(6, "S6", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(7, "S7", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(8, "S8", vec![("", (2, 2))], Some(5), 5),
                 ],
                 25,
                 25,
@@ -507,12 +526,12 @@ mod tests {
             ),
             BestCombinationDto::new(
                 vec![
-                    BestCombinationPackageDto::new(1, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(2, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(3, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(4, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(5, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(7, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(1, "S1", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(2, "S2", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(3, "S3", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(4, "S4", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(5, "S5", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(7, "S7", vec![("", (2, 2))], Some(5), 5),
                 ],
                 30,
                 30,
@@ -520,12 +539,12 @@ mod tests {
             ),
             BestCombinationDto::new(
                 vec![
-                    BestCombinationPackageDto::new(1, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(2, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(3, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(4, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(7, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(8, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(1, "S1", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(2, "S2", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(3, "S3", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(4, "S4", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(7, "S7", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(8, "S8", vec![("", (2, 2))], Some(5), 5),
                 ],
                 30,
                 30,
@@ -533,12 +552,12 @@ mod tests {
             ),
             BestCombinationDto::new(
                 vec![
-                    BestCombinationPackageDto::new(1, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(2, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(3, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(5, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(6, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(7, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(1, "S1", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(2, "S2", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(3, "S3", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(5, "S5", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(6, "S6", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(7, "S7", vec![("", (2, 2))], Some(5), 5),
                 ],
                 30,
                 30,
@@ -561,6 +580,7 @@ mod tests {
         let subsets = vec![
             BestCombinationSubsetDto::new(
                 1,
+                "S1",
                 BTreeSet::from([
                     BestCombinationElementDto::new(1, "", 1, 1),
                     BestCombinationElementDto::new(2, "", 1, 1),
@@ -571,6 +591,7 @@ mod tests {
             ),
             BestCombinationSubsetDto::new(
                 2,
+                "S2",
                 BTreeSet::from([
                     BestCombinationElementDto::new(2, "", 1, 1),
                     BestCombinationElementDto::new(4, "", 1, 1),
@@ -581,6 +602,7 @@ mod tests {
             ),
             BestCombinationSubsetDto::new(
                 4,
+                "S4",
                 BTreeSet::from([
                     BestCombinationElementDto::new(7, "", 1, 1),
                     BestCombinationElementDto::new(8, "", 1, 1),
@@ -590,6 +612,7 @@ mod tests {
             ),
             BestCombinationSubsetDto::new(
                 5,
+                "S5",
                 BTreeSet::from([
                     BestCombinationElementDto::new(9, "", 1, 1),
                     BestCombinationElementDto::new(10, "", 1, 1),
@@ -599,6 +622,7 @@ mod tests {
             ),
             BestCombinationSubsetDto::new(
                 6,
+                "S6",
                 BTreeSet::from([
                     BestCombinationElementDto::new(4, "", 1, 1),
                     BestCombinationElementDto::new(7, "", 1, 1),
@@ -608,6 +632,7 @@ mod tests {
             ),
             BestCombinationSubsetDto::new(
                 7,
+                "S7",
                 BTreeSet::from([
                     BestCombinationElementDto::new(5, "", 1, 1),
                     BestCombinationElementDto::new(8, "", 1, 1),
@@ -618,6 +643,7 @@ mod tests {
             ),
             BestCombinationSubsetDto::new(
                 8,
+                "S8",
                 BTreeSet::from([
                     BestCombinationElementDto::new(10, "", 1, 1),
                     BestCombinationElementDto::new(1, "", 1, 1),
@@ -632,10 +658,10 @@ mod tests {
         let expected_cover = &[
             BestCombinationDto::new(
                 vec![
-                    BestCombinationPackageDto::new(1, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(5, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(6, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(7, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(1, "S1", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(5, "S5", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(6, "S6", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(7, "S7", vec![("", (2, 2))], Some(5), 5),
                 ],
                 20,
                 20,
@@ -643,10 +669,10 @@ mod tests {
             ),
             BestCombinationDto::new(
                 vec![
-                    BestCombinationPackageDto::new(1, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(6, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(7, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(8, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(1, "S1", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(6, "S6", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(7, "S7", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(8, "S8", vec![("", (2, 2))], Some(5), 5),
                 ],
                 20,
                 20,
@@ -654,11 +680,11 @@ mod tests {
             ),
             BestCombinationDto::new(
                 vec![
-                    BestCombinationPackageDto::new(1, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(2, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(4, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(5, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(7, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(1, "S1", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(2, "S2", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(4, "S4", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(5, "S5", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(7, "S7", vec![("", (2, 2))], Some(5), 5),
                 ],
                 25,
                 25,
@@ -666,11 +692,11 @@ mod tests {
             ),
             BestCombinationDto::new(
                 vec![
-                    BestCombinationPackageDto::new(1, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(2, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(4, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(7, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(8, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(1, "S1", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(2, "S2", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(4, "S4", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(7, "S7", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(8, "S8", vec![("", (2, 2))], Some(5), 5),
                 ],
                 25,
                 25,
@@ -678,11 +704,11 @@ mod tests {
             ),
             BestCombinationDto::new(
                 vec![
-                    BestCombinationPackageDto::new(1, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(2, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(5, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(6, vec![("", (2, 2))], Some(5), 5),
-                    BestCombinationPackageDto::new(7, vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(1, "S1", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(2, "S2", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(5, "S5", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(6, "S6", vec![("", (2, 2))], Some(5), 5),
+                    BestCombinationPackageDto::new(7, "S7", vec![("", (2, 2))], Some(5), 5),
                 ],
                 25,
                 25,
@@ -707,6 +733,7 @@ mod tests {
             vec![
                 BestCombinationPackageDto::new(
                     3,
+                    "ZDF - Free-TV",
                     vec![
                         ("UEFA Champions League 24/25", (0, 2)),
                         ("Bundesliga 24/25", (0, 2)),
@@ -717,6 +744,7 @@ mod tests {
                 ),
                 BestCombinationPackageDto::new(
                     37,
+                    "DAZN - World",
                     vec![
                         ("UEFA Champions League 24/25", (0, 2)),
                         ("DFB Pokal 24/25", (0, 2)),
@@ -747,6 +775,7 @@ mod tests {
                 vec![
                     BestCombinationPackageDto::new(
                         3,
+                        "ZDF - Free-TV",
                         vec![
                             ("UEFA Champions League 24/25", (0, 2)),
                             ("Bundesliga 24/25", (0, 2)),
@@ -757,6 +786,7 @@ mod tests {
                     ),
                     BestCombinationPackageDto::new(
                         37,
+                        "DAZN - World",
                         vec![
                             ("UEFA Champions League 24/25", (0, 2)),
                             ("DFB Pokal 24/25", (0, 2)),
@@ -773,6 +803,7 @@ mod tests {
                 vec![
                     BestCombinationPackageDto::new(
                         3,
+                        "ZDF - Free-TV",
                         vec![
                             ("UEFA Champions League 24/25", (0, 2)),
                             ("Bundesliga 24/25", (0, 2)),
@@ -783,6 +814,7 @@ mod tests {
                     ),
                     BestCombinationPackageDto::new(
                         38,
+                        "DAZN - Super Sports",
                         vec![
                             ("UEFA Champions League 24/25", (0, 2)),
                             ("DFB Pokal 24/25", (0, 2)),
@@ -799,6 +831,7 @@ mod tests {
                 vec![
                     BestCombinationPackageDto::new(
                         3,
+                        "ZDF - Free-TV",
                         vec![
                             ("UEFA Champions League 24/25", (0, 2)),
                             ("Bundesliga 24/25", (0, 2)),
@@ -809,6 +842,7 @@ mod tests {
                     ),
                     BestCombinationPackageDto::new(
                         10,
+                        "WOW - Live-Sport",
                         vec![("Bundesliga 24/25", (1, 2)), ("DFB Pokal 24/25", (2, 2))],
                         Some(3599),
                         2999,

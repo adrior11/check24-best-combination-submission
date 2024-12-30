@@ -1,3 +1,4 @@
+// BUG: Map games with no monthly_price_cents should lead to Null combined
 use std::collections::{BTreeSet, HashMap};
 
 use libs::models::dtos::{
@@ -117,6 +118,7 @@ pub fn map_to_best_combination_dto(
 
             packages.push(BestCombinationPackageDto {
                 id: subset.streaming_package_id,
+                name: subset.name.clone(),
                 coverage: coverage_map,
                 monthly_price_cents: subset.monthly_price_cents,
                 monthly_price_yearly_subscription_in_cents: subset
@@ -182,39 +184,31 @@ mod tests {
     fn test_mapper() {
         let current_cover = [1, 2, 4];
         let subsets = vec![
-            BestCombinationSubsetDto {
-                streaming_package_id: 1,
-                elements: BTreeSet::from([BestCombinationElementDto::new(1, "A", 1, 1)]),
-                monthly_price_cents: Some(10),
-                monthly_price_yearly_subscription_in_cents: 10,
-            },
-            BestCombinationSubsetDto {
-                streaming_package_id: 2,
-                elements: BTreeSet::from([
+            BestCombinationSubsetDto::new(
+                1,
+                "S1",
+                BTreeSet::from([BestCombinationElementDto::new(1, "A", 1, 1)]),
+                Some(10),
+                10,
+            ),
+            BestCombinationSubsetDto::new(
+                2,
+                "S2",
+                BTreeSet::from([
                     BestCombinationElementDto::new(1, "A", 1, 1),
                     BestCombinationElementDto::new(3, "A", 1, 0),
                 ]),
-                monthly_price_cents: None,
-                monthly_price_yearly_subscription_in_cents: 10,
-            },
+                None,
+                10,
+            ),
         ];
         let universe = BTreeSet::from([1, 2, 3]);
 
         let result = map_to_best_combination_dto(&current_cover, &subsets, &universe);
         let expected = BestCombinationDto {
             packages: vec![
-                BestCombinationPackageDto {
-                    id: 1,
-                    coverage: HashMap::from([("A".to_string(), (2, 2))]),
-                    monthly_price_cents: Some(10),
-                    monthly_price_yearly_subscription_in_cents: 10,
-                },
-                BestCombinationPackageDto {
-                    id: 2,
-                    coverage: HashMap::from([("A".to_string(), (2, 1))]),
-                    monthly_price_cents: None,
-                    monthly_price_yearly_subscription_in_cents: 10,
-                },
+                BestCombinationPackageDto::new(1, "S1", vec![("A", (2, 2))], Some(10), 10),
+                BestCombinationPackageDto::new(2, "S2", vec![("A", (2, 1))], None, 10),
             ],
             combined_monthly_price_cents: 10,
             combined_monthly_price_yearly_subscription_in_cents: 20,
@@ -228,18 +222,20 @@ mod tests {
     fn test_mapper_with_duplicate_ids() {
         let current_cover = [1];
         let subsets = vec![
-            BestCombinationSubsetDto {
-                streaming_package_id: 1,
-                elements: BTreeSet::from([BestCombinationElementDto::new(1, "A", 1, 1)]),
-                monthly_price_cents: Some(10),
-                monthly_price_yearly_subscription_in_cents: 10,
-            },
-            BestCombinationSubsetDto {
-                streaming_package_id: 1,
-                elements: BTreeSet::from([BestCombinationElementDto::new(1, "A", 1, 1)]),
-                monthly_price_cents: Some(10),
-                monthly_price_yearly_subscription_in_cents: 10,
-            },
+            BestCombinationSubsetDto::new(
+                1,
+                "S1",
+                BTreeSet::from([BestCombinationElementDto::new(1, "A", 1, 1)]),
+                Some(10),
+                10,
+            ),
+            BestCombinationSubsetDto::new(
+                1,
+                "S1",
+                BTreeSet::from([BestCombinationElementDto::new(1, "A", 1, 1)]),
+                Some(10),
+                10,
+            ),
         ];
         let universe = BTreeSet::from([1]);
 
@@ -247,12 +243,13 @@ mod tests {
 
         // Duplicate packages do not increase the number of packages or sums.
         let expected = BestCombinationDto {
-            packages: vec![BestCombinationPackageDto {
-                id: 1,
-                coverage: HashMap::from([("A".to_string(), (2, 2))]),
-                monthly_price_cents: Some(10),
-                monthly_price_yearly_subscription_in_cents: 10,
-            }],
+            packages: vec![BestCombinationPackageDto::new(
+                1,
+                "S1",
+                vec![("A", (2, 2))],
+                Some(10),
+                10,
+            )],
             combined_monthly_price_cents: 10,
             combined_monthly_price_yearly_subscription_in_cents: 10,
             combined_coverage: 100,
