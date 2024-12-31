@@ -7,6 +7,7 @@ pub struct Config {
     pub redis_url: String,
     pub rabbitmq_url: String,
     pub task_queue_name: String,
+    pub use_yearly_price: bool,
 }
 
 pub static CONFIG: Lazy<Config> = Lazy::new(|| {

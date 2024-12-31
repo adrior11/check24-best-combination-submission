@@ -74,6 +74,7 @@ jobs:
           TASK_QUEUE_NAME: ${{ secrets.TASK_QUEUE_NAME }}
           API_SERVICE_PORT: ${{ secrets.API_SERVICE_PORT }}
           DATA_FETCH_SERVICE_PORT: ${{ secrets.DATA_FETCH_SERVICE_PORT }}
+          USE_YEARLY_PRICE: ${{ USE_YEARLY_PRICE }}
           LOG_LEVEL: ${{ secrets.LOG_LEVEL }}
         run: cargo test --verbose
 
@@ -86,5 +87,6 @@ jobs:
           TASK_QUEUE_NAME: ${{ secrets.TASK_QUEUE_NAME }}
           API_SERVICE_PORT: ${{ secrets.API_SERVICE_PORT }}
           DATA_FETCH_SERVICE_PORT: ${{ secrets.DATA_FETCH_SERVICE_PORT }}
+          USE_YEARLY_PRICE: ${{ USE_YEARLY_PRICE }}
           LOG_LEVEL: ${{ secrets.LOG_LEVEL }}
         run: cargo test --release --verbose -- --test-threads=1

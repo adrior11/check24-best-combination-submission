@@ -4,6 +4,7 @@ use std::collections::BTreeSet;
 use libs::models::dtos::{BestCombinationDto, BestCombinationSubsetDto};
 
 use super::mapper;
+use crate::CONFIG;
 
 /// Computes a set of best combinations of streaming package subsets that cover a given universe of game IDs.
 ///
@@ -120,7 +121,12 @@ fn enumerate_best_combinations(
             let uncovered_elements = s.element_ids().difference(&covered).count();
 
             if uncovered_elements > 0 {
-                let cost = s.monthly_price_cents.unwrap_or(usize::MAX) as f64;
+                let cost = if CONFIG.use_yearly_price {
+                    s.monthly_price_yearly_subscription_in_cents as f64
+                } else {
+                    // Use a high value if monthly_price_cents is None to effectively exclude this subset
+                    s.monthly_price_cents.unwrap_or(usize::MAX) as f64
+                };
                 Some((i, cost / uncovered_elements as f64))
             } else {
                 None // skip subsets that don't add coverage
@@ -205,6 +211,7 @@ mod tests {
 
     #[test]
     fn test_no_subsets() {
+        dotenv::dotenv().ok();
         let universe = BTreeSet::from([1, 2]);
         let subsets = vec![];
         let limit = 5;
@@ -216,6 +223,7 @@ mod tests {
 
     #[test]
     fn test_empty_universe() {
+        dotenv::dotenv().ok();
         let universe = BTreeSet::new();
         let subsets = vec![BestCombinationSubsetDto::new(
             1,
@@ -237,6 +245,7 @@ mod tests {
 
     #[test]
     fn test_empty_universe_no_subsets() {
+        dotenv::dotenv().ok();
         let universe = BTreeSet::new();
         let subsets = vec![];
         let limit = 2;
@@ -248,6 +257,7 @@ mod tests {
 
     #[test]
     fn test_single_full_cover() {
+        dotenv::dotenv().ok();
         let universe = BTreeSet::from([1, 2, 3]);
         let subsets = vec![BestCombinationSubsetDto::new(
             1,
@@ -281,6 +291,7 @@ mod tests {
 
     #[test]
     fn test_impossible_coverage() {
+        dotenv::dotenv().ok();
         let universe = BTreeSet::from([1, 2, 3]);
         let subsets = vec![
             BestCombinationSubsetDto::new(
@@ -320,6 +331,7 @@ mod tests {
 
     #[test]
     fn test_duplicate_subsets() {
+        dotenv::dotenv().ok();
         let universe = BTreeSet::from([1]);
         let subsets = vec![
             BestCombinationSubsetDto::new(
@@ -362,6 +374,7 @@ mod tests {
 
     #[test]
     fn test_identical_subsets() {
+        dotenv::dotenv().ok();
         let universe = BTreeSet::from([1, 2]);
         let subsets = vec![
             BestCombinationSubsetDto::new(
@@ -418,6 +431,7 @@ mod tests {
 
     #[test]
     fn test_large_universe() {
+        dotenv::dotenv().ok();
         let universe: BTreeSet<_> = (1..=10).collect();
         let subsets = vec![
             BestCombinationSubsetDto::new(
@@ -588,6 +602,7 @@ mod tests {
 
     #[test]
     fn test_uncoverable_approximation() {
+        dotenv::dotenv().ok();
         let universe: BTreeSet<_> = (1..=10).collect();
         let subsets = vec![
             BestCombinationSubsetDto::new(
@@ -746,6 +761,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_best_combination_without_limit() {
+        dotenv::dotenv().ok();
         let (game_ids, subsets) = setup_data().await;
 
         let expected = [BestCombinationDto::new(
@@ -788,6 +804,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_best_combination_with_limit() {
+        dotenv::dotenv().ok();
         let (game_ids, subsets) = setup_data().await;
 
         let expected = [
