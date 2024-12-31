@@ -1,35 +1,28 @@
+import { MdOutlineCancel, MdCheckCircleOutline } from 'react-icons/md';
+
 import { formatPrice } from './util';
 import type { BestCombination } from './types';
 
 // Helper function for coverage indicators
 const coverageIndicator = (value: number) => {
-    // 0 = grey X, 1 = yellow check, 2 = green check
+    // 0 = grey close, 1 = yellow check, 2 = green check
     switch (value) {
         case 0:
             return (
-                <div
-                    className="inline-block w-4 h-4 rounded-full bg-gray-400 text-white flex items-center justify-center"
-                    title="No coverage"
-                >
-                    ✕
+                <div className="inline-block text-gray-400 flex items-center justify-center" title="No coverage">
+                    <MdOutlineCancel />
                 </div>
             );
         case 1:
             return (
-                <div
-                    className="inline-block w-4 h-4 rounded-full bg-yellow-400 text-white flex items-center justify-center"
-                    title="Partial coverage"
-                >
-                    ✓
+                <div className="inline-block text-yellow-400 flex items-center justify-center" title="Partial coverage">
+                    <MdCheckCircleOutline />
                 </div>
             );
         case 2:
             return (
-                <div
-                    className="inline-block w-4 h-4 rounded-full bg-green-500 text-white flex items-center justify-center"
-                    title="Full coverage"
-                >
-                    ✓
+                <div className="inline-block text-green-500 flex items-center justify-center" title="Full coverage">
+                    <MdCheckCircleOutline />
                 </div>
             );
         default:
@@ -120,10 +113,11 @@ export const CombinationCard: React.FC<CombinationCardProps> = ({ combination, i
                                 <th key={i} className="p-2 text-center">
                                     <div className="flex flex-col items-center">
                                         <span className="text-xs text-gray-500">
-                                            {formatPrice(pkg.monthlyPriceCents ?? 0)}/m
+                                            {/* FIX: Conditional formatting */}
+                                            {formatPrice(pkg.monthlyPriceCents ?? 0)} pm
                                         </span>
                                         <span className="text-xs text-gray-500">
-                                            {formatPrice(pkg.monthlyPriceYearlySubscriptionInCents)}/y
+                                            {formatPrice(pkg.monthlyPriceYearlySubscriptionInCents)} pm (yr)
                                         </span>
                                     </div>
                                 </th>
