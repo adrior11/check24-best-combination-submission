@@ -386,9 +386,8 @@ The results showed that the final version could find additional valid set covers
 Additionally, I evaluated how the algorithm performs when finding subsequent best combinations:
 
 **Final Algorithm:**
-> Input being the number of best combinations to retrieve
 ![recursive_set_cover](assets/recursive_set_cover.png)
-
+> Input being the number of best combinations to retrieve
 
 The benchmark demonstrated efficient performance when identifying the top 4 best combinations being **~10ms**.
 
