@@ -1,3 +1,4 @@
+import React from 'react';
 import { MdOutlineCancel, MdCheckCircleOutline } from 'react-icons/md';
 
 import { formatPrice } from './util';
@@ -5,7 +6,7 @@ import type { BestCombination } from './types';
 
 // Helper function for coverage indicators
 const coverageIndicator = (value: number) => {
-    // 0 = grey close, 1 = yellow check, 2 = green check
+    // 0 = grey cancel, 1 = yellow check, 2 = green check
     switch (value) {
         case 0:
             return (
@@ -37,7 +38,14 @@ interface CombinationCardProps {
 
 export const CombinationCard: React.FC<CombinationCardProps> = ({ combination, index }) => {
     // Construct a unique set of coverage keys across all packages to build matrix row labels.
-    const coverageKeys = Array.from(new Set(combination.packages.flatMap(pkg => Object.keys(pkg.coverage))));
+    const coverageKeys = React.useMemo(() => {
+        const keysSet = new Set<string>();
+        combination.packages.forEach(pkg => {
+            Object.keys(pkg.coverage).forEach(key => keysSet.add(key));
+        });
+        // Convert Set to Array and sort alphabetically
+        return Array.from(keysSet).sort((a, b) => a.localeCompare(b));
+    }, [combination.packages]);
 
     return (
         <div className="relative border-2 rounded-md p-6 mb-4">
