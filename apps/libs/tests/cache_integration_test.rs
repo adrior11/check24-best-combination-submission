@@ -25,6 +25,7 @@ async fn test_int_cache() -> anyhow::Result<()> {
         30,
         30,
         99,
+        1,
     )];
 
     caching::cache_entry(&redis_client, &key, CacheValue::Data(value.clone()))

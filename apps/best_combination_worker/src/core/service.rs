@@ -101,8 +101,9 @@ fn enumerate_best_combinations(
 
     // Check if all elements are covered or if a leaf node has been reached
     if covered == *universe || current_cover.len() >= subsets.len() {
-        let result = mapper::map_to_best_combination_dto(current_cover, subsets, universe);
-        if !results.contains(&result) {
+        let result =
+            mapper::map_to_best_combination_dto(current_cover, subsets, universe, results.len());
+        if !results.iter().any(|r| r.is_duplicate_of(&result)) {
             results.push(result);
             if results.len() >= limit {
                 return true; // Signal to stop further recursion
@@ -157,8 +158,9 @@ fn enumerate_best_combinations(
 
     // If the branch is fully explored, save the current cover as the closest achievable
     if branch_explored && !current_cover.is_empty() {
-        let result = mapper::map_to_best_combination_dto(current_cover, subsets, universe);
-        if !results.contains(&result) {
+        let result =
+            mapper::map_to_best_combination_dto(current_cover, subsets, universe, results.len());
+        if !results.iter().any(|r| r.is_duplicate_of(&result)) {
             results.push(result);
         }
     }
@@ -207,7 +209,7 @@ mod tests {
         let subsets = vec![];
         let limit = 5;
 
-        let expected_cover = vec![BestCombinationDto::new(vec![], 0, 0, 0)];
+        let expected_cover = vec![BestCombinationDto::new(vec![], 0, 0, 0, 0)];
         let results = get_best_combinations(&universe, &subsets, limit);
         assert_eq!(results, expected_cover);
     }
@@ -228,7 +230,7 @@ mod tests {
         )];
         let limit = 5;
 
-        let expected_cover = vec![BestCombinationDto::new(vec![], 0, 0, 0)];
+        let expected_cover = vec![BestCombinationDto::new(vec![], 0, 0, 0, 0)];
         let results = get_best_combinations(&universe, &subsets, limit);
         assert_eq!(results, expected_cover);
     }
@@ -239,7 +241,7 @@ mod tests {
         let subsets = vec![];
         let limit = 2;
 
-        let expected_cover = vec![BestCombinationDto::new(vec![], 0, 0, 0)];
+        let expected_cover = vec![BestCombinationDto::new(vec![], 0, 0, 0, 0)];
         let results = get_best_combinations(&universe, &subsets, limit);
         assert_eq!(results, expected_cover);
     }
@@ -271,6 +273,7 @@ mod tests {
             10,
             10,
             100,
+            0,
         )];
         let results = get_best_combinations(&universe, &subsets, limit);
         assert_eq!(results, expected_cover);
@@ -306,6 +309,7 @@ mod tests {
             10,
             20,
             67,
+            0,
         )];
         let results = get_best_combinations(&universe, &subsets, limit);
         assert_eq!(
@@ -346,6 +350,7 @@ mod tests {
             5,
             10,
             100,
+            0,
         )];
         let results = get_best_combinations(&universe, &subsets, limit);
         assert!(results.len() == 1);
@@ -394,6 +399,7 @@ mod tests {
                 10,
                 10,
                 100,
+                0,
             ),
             BestCombinationDto::new(
                 vec![
@@ -403,6 +409,7 @@ mod tests {
                 10,
                 10,
                 100,
+                1,
             ),
         ];
         let results = get_best_combinations(&universe, &subsets, limit);
@@ -511,6 +518,7 @@ mod tests {
                 25,
                 25,
                 100,
+                0,
             ),
             BestCombinationDto::new(
                 vec![
@@ -523,6 +531,7 @@ mod tests {
                 25,
                 25,
                 100,
+                1,
             ),
             BestCombinationDto::new(
                 vec![
@@ -536,6 +545,7 @@ mod tests {
                 30,
                 30,
                 100,
+                2,
             ),
             BestCombinationDto::new(
                 vec![
@@ -549,6 +559,7 @@ mod tests {
                 30,
                 30,
                 100,
+                3,
             ),
             BestCombinationDto::new(
                 vec![
@@ -562,6 +573,7 @@ mod tests {
                 30,
                 30,
                 100,
+                4,
             ),
         ];
         let results = get_best_combinations(&universe, &subsets, limit);
@@ -666,6 +678,7 @@ mod tests {
                 20,
                 20,
                 90,
+                0,
             ),
             BestCombinationDto::new(
                 vec![
@@ -677,6 +690,7 @@ mod tests {
                 20,
                 20,
                 90,
+                1,
             ),
             BestCombinationDto::new(
                 vec![
@@ -689,6 +703,7 @@ mod tests {
                 25,
                 25,
                 90,
+                2,
             ),
             BestCombinationDto::new(
                 vec![
@@ -701,6 +716,7 @@ mod tests {
                 25,
                 25,
                 90,
+                3,
             ),
             BestCombinationDto::new(
                 vec![
@@ -713,9 +729,12 @@ mod tests {
                 25,
                 25,
                 90,
+                4,
             ),
         ];
         let results = get_best_combinations(&universe, &subsets, limit);
+        dbg!(&results);
+        dbg!(&expected_cover);
 
         assert!(
             !results.is_empty(),
@@ -756,6 +775,7 @@ mod tests {
             999,
             699,
             99,
+            0,
         )];
 
         let limit = 1;
@@ -798,6 +818,7 @@ mod tests {
                 999,
                 699,
                 99,
+                0,
             ),
             BestCombinationDto::new(
                 vec![
@@ -826,6 +847,7 @@ mod tests {
                 2499,
                 1999,
                 99,
+                1,
             ),
             BestCombinationDto::new(
                 vec![
@@ -851,6 +873,7 @@ mod tests {
                 3599,
                 2999,
                 99,
+                2,
             ),
         ];
 

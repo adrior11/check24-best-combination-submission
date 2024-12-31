@@ -101,6 +101,7 @@ pub fn map_to_best_combination_dto(
     current_cover: &[usize],
     subsets: &[BestCombinationSubsetDto],
     universe: &BTreeSet<usize>,
+    index: usize,
 ) -> BestCombinationDto {
     let mut packages = Vec::new();
     let mut combined_monthly_price_cents = 0;
@@ -144,6 +145,7 @@ pub fn map_to_best_combination_dto(
         combined_monthly_price_cents,
         combined_monthly_price_yearly_subscription_in_cents,
         combined_coverage,
+        index,
     }
 }
 
@@ -203,7 +205,7 @@ mod tests {
         ];
         let universe = BTreeSet::from([1, 2, 3]);
 
-        let result = map_to_best_combination_dto(&current_cover, &subsets, &universe);
+        let result = map_to_best_combination_dto(&current_cover, &subsets, &universe, 0);
         let expected = BestCombinationDto {
             packages: vec![
                 BestCombinationPackageDto::new(1, "S1", vec![("A", (2, 2))], Some(10), 10),
@@ -212,6 +214,7 @@ mod tests {
             combined_monthly_price_cents: 10,
             combined_monthly_price_yearly_subscription_in_cents: 20,
             combined_coverage: 67,
+            index: 0,
         };
 
         assert_eq!(result, expected);
@@ -238,7 +241,7 @@ mod tests {
         ];
         let universe = BTreeSet::from([1]);
 
-        let result = map_to_best_combination_dto(&current_cover, &subsets, &universe);
+        let result = map_to_best_combination_dto(&current_cover, &subsets, &universe, 0);
 
         // Duplicate packages do not increase the number of packages or sums.
         let expected = BestCombinationDto {
@@ -252,6 +255,7 @@ mod tests {
             combined_monthly_price_cents: 10,
             combined_monthly_price_yearly_subscription_in_cents: 10,
             combined_coverage: 100,
+            index: 0,
         };
 
         assert_eq!(
