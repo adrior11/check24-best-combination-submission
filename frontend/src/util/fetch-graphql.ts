@@ -1,10 +1,11 @@
+const URL = import.meta.env.PUBLIC_API_URL;
+
 interface GraphQLError {
     message: string;
 }
 
 export async function fetchGraphQL<TData>(query: string, variables?: Record<string, unknown>): Promise<TData> {
-    // TODO: Use env url for container
-    const response = await fetch('http://localhost:4000', {
+    const response = await fetch(URL, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

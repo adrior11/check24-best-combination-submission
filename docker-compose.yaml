@@ -80,6 +80,7 @@ services:
       REDIS_URL: ${REDIS_URL_INTERNAL}
       RABBITMQ_URL: ${RABBITMQ_URL_INTERNAL}
       TASK_QUEUE_NAME: ${TASK_QUEUE_NAME}
+      USE_YEARLY_PRICE: ${USE_YEARLY_PRICE}
       LOG_LEVEL: ${LOG_LEVEL}
     networks:
       - app-network
@@ -121,7 +122,7 @@ services:
     ports:
       - "5000:5000"
     environment:
-      APOLLO_URL: ${APOLLO_URL}
+      PUBLIC_API_URL: ${PUBLIC_API_URL_INTERNAL}
     networks:
       - app-network
     restart: unless-stopped
