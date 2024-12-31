@@ -67,7 +67,7 @@ export const CombinationCard: React.FC<CombinationCardProps> = ({ combination, i
             {/* Coverage Matrix */}
             <div className="overflow-x-auto">
                 <table className="min-w-full border-collapse text-sm">
-                    <thead>
+                    <thead className="align-bottom">
                         {/* Header Row: Package Names */}
                         <tr>
                             <th className="p-2 text-left border-b border-gray-200"></th>
@@ -112,10 +112,12 @@ export const CombinationCard: React.FC<CombinationCardProps> = ({ combination, i
                             {combination.packages.map((pkg, i) => (
                                 <th key={i} className="p-2 text-center">
                                     <div className="flex flex-col items-center">
-                                        <span className="text-xs text-gray-500">
-                                            {/* FIX: Conditional formatting */}
-                                            {formatPrice(pkg.monthlyPriceCents ?? 0)} pm
-                                        </span>
+                                        {/* Render only if monthlyPriceCents exists */}
+                                        {pkg.monthlyPriceCents !== undefined && (
+                                            <span className="text-xs text-gray-500">
+                                                {formatPrice(pkg.monthlyPriceCents)} pm
+                                            </span>
+                                        )}
                                         <span className="text-xs text-gray-500">
                                             {formatPrice(pkg.monthlyPriceYearlySubscriptionInCents)} pm (yr)
                                         </span>
