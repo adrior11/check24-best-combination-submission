@@ -1,11 +1,5 @@
 # check24-best-combination-submission
 
-## 📑 Table of Contents
-1. [How to Run Locally](#how-to-run-locally)
-2. [Dashboards and Utilities](#dashboards-and-utilities)
-3. [Approach](#approach)
-4. [Optimizations](#optimizations)
-
 ## 🛠️ How to Run Locally
 
 ### 📋 Prerequisites
@@ -81,7 +75,7 @@ $ cd frontend
 $ pnpm i
 $ pnpm run dev
 ```
-The frontend should now be accessible with `Astro` on [localhost:431](http://localhost:4321)
+The frontend should now be accessible with `Astro` on [localhost:4321](http://localhost:4321)
 
 ### 📈 Dashboards
 Once you've started the containerized environment, additional dashboard and utilities become available.
@@ -113,21 +107,28 @@ password: example
 
 ### 🛠️ Tech Stack
 
-Technologies Used:
-	- **Rust:** Fast, memory-safe, and enjoyable to work with.
-	- **MongoDB:** Chosen for persistence with MongoDB Compass and indexes for convenience and maintainability.
-	- **Redis:** Used to store best combination results in cache to mitigate the need to enqueue jobs to the worker-services.
-	- **RabbitMQ:** Delegates best combination workloads to distributed worker nodes that pick jobs from the queue and store their results in cache.
-	- **Docker:** Orchestration tool for the distributed systems.
-	- **Apollo:** Combines the services’ GraphQL endpoints into a single API for ease of use by the frontend.
-	- **GraphQL:** Preferred over REST for dynamic data retrieval tailored to the client’s needs.
-	- **Prometheus:** Introduces metrics for the services, allowing them to be monitored.
-	- **Grafana:** Visualizes the scraped metrics from Prometheus in dashboards.
-	- **GitHub (Actions):** Ensures working production code through continuous integration.
-	- **Node.js:** Utilized for the frontend.
-	- **Astro:** Preferred for the UI due to its pure HTML and client-side JS, enabling quick and responsive interfaces.
-	- **React:** Used for building custom components for visualizing the best combinations.
-	- **Tailwind CSS:** Facilitates the creation of a visually appealing UI with ease.
+![tech_stack](assets/tech_stack.png)
+
+**Technologies Used:**
+- **Rust:** Fast, memory-safe, and enjoyable to work with.
+- **MongoDB:** Chosen for persistence with MongoDB Compass and indexes for convenience and maintainability.
+- **Redis:** Used to store best combination results in cache to mitigate the need to enqueue jobs to the worker-services.
+- **RabbitMQ:** Delegates best combination workloads to distributed worker nodes that pick jobs from the queue and store their results in cache.
+- **Docker:** Orchestration tool for the distributed systems.
+- **Apollo:** Combines the services’ GraphQL endpoints into a single API for ease of use by the frontend.
+- **GraphQL:** Preferred over REST for dynamic data retrieval tailored to the client’s needs.
+- **Prometheus:** Introduces metrics for the services, allowing them to be monitored.
+- **Grafana:** Visualizes the scraped metrics from Prometheus in dashboards.
+- **GitHub (Actions):** Ensures working production code through continuous integration.
+- **Node.js:** Utilized for the frontend.
+- **Astro:** Preferred for the UI due to its pure HTML and client-side JS, enabling quick and responsive interfaces.
+- **React:** Used for building custom components for visualizing the best combinations.
+- **Tailwind CSS:** Facilitates the creation of a visually appealing UI with ease.
+
+### 👨🏼‍💻 User Interface
+
+![ui](assets/ui.png)
+![bc_card](assets/bc_card.png)
 
 ### 🔍 Set Cover Best Combinations Algorithm
 
@@ -374,11 +375,22 @@ fn enumerate_best_combinations(
 ### ⚡️ Benchmarking
 From the beginning of this project, my primary goal was not only to find a solution for the best combination but also to ensure it was fast and capable of finding alternatives. I benchmarked my initial solution, which was a basic iterative set cover algorithm, against the final version assuming the worst-case scenario of all game IDs:
 
+**Iterative:**
+![set_cover_comp_1](assets/set_cover_comp_1.png)
+
+**Recursive:**
+![set_cover_comp_2](assets/set_cover_comp_2.png)
+
 The results showed that the final version could find additional valid set covers and set cover approximations while also being faster, achieving **sub-5ms** benchmarks.
 
 Additionally, I evaluated how the algorithm performs when finding subsequent best combinations:
 
-The benchmark demonstrated efficient performance when identifying the top 4 best combinations.
+**Final Algorithm:**
+> Input being the number of best combinations to retrieve
+![recursive_set_cover](assets/recursive_set_cover.png)
+
+
+The benchmark demonstrated efficient performance when identifying the top 4 best combinations being **~10ms**.
 
 For running the benchmark on your machine:
 ```bash
@@ -389,7 +401,7 @@ $ cargo bench -v
 ### 🚦 Loadtests
 I conducted load tests to assess how the backend performs under high usage:
 
-The results indicate that the average response time is processed in less than 50ms, making it suitable for real-world usage and ensuring a responsive UI.
+The results indicate that the average response time is processed in less than **50ms**, making it suitable for real-world usage and ensuring a responsive UI.
 
 You can conduct the load test using the dashboards for monitoring the API:
 ```rust
@@ -397,11 +409,17 @@ You can conduct the load test using the dashboards for monitoring the API:
 $ brew install k6
 $ k6 run loadtests/loadtest.js
 ```
+
 ## ⚙️ Optimizations
 > [!NOTE]
 > Please note that the benchmark and load test data were gathered on an M1 MacBook Pro. Results may vary depending on the system.
 
 During load tests, it was notable that the workers took a significant amount of time to acknowledge messages received via the queue. This delay is due to the preprocessing of the best combinations subset. The aggregation pipeline utilizes two nested `$lookup` operations, which introduces substantial overhead, as seen via the RabbitMQ dashboard:
+
+![unoptimized-aggregation](assets/unoptimized-aggregation.png)
+
+**Pipeline:**
+![preprocess](assets/preprocess.png)
 
 After benchmarking and profiling, this was identified as the only remaining bottleneck.
 
