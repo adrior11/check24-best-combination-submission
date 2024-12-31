@@ -417,21 +417,22 @@ $ k6 run loadtests/loadtest.js
 During load tests, it was notable that the workers took a significant amount of time to acknowledge messages received via the queue. This delay is due to the preprocessing of the best combinations subset. The aggregation pipeline utilizes two nested `$lookup` operations, which introduces substantial overhead, as seen via the RabbitMQ dashboard:
 
 ![unoptimized-aggregation](assets/unoptimized-aggregation.png)
+> Red: jobs enqueued; Purple: jobs acknowledged
 
 **Pipeline:**
 ![preprocess](assets/preprocess.png)
 
 After benchmarking and profiling, this was identified as the only remaining bottleneck.
 
-Suggested Approaches:
-	1.	Embed Subset Documents:
-	    - Embed the subset documents directly to reduce the need for `$lookup` operations.
-	    - Pros: Improved performance by minimizing join operations.
-	    - Cons: Increased memory usage due to data duplication.
-	2. Denormalization Techniques:
-	    - Create an additional collection to store pre-joined data.
-	    - Pros: Balances memory usage and performance.
-	    - Cons: Requires maintaining data consistency across collections.
+**Suggested Approaches:**
+1. Embed Subset Documents:
+	- Embed the subset documents directly to reduce the need for `$lookup` operations.
+	- **Pros:** Improved performance by minimizing join operations.
+	- **Cons:** Increased memory usage due to data duplication.
+2. Denormalization Techniques:
+	- Create an additional collection to store pre-joined data.
+	- **Pros:** Balances memory usage and performance.
+	- **Cons:** Requires maintaining data consistency across collections.
 
 More information on these approaches can be found [here](https://www.mongodb.com/docs/atlas/schema-suggestions/reduce-lookup-operations/?utm_source=compass&utm_medium=product#learn-more).
 
