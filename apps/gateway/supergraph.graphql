@@ -27,6 +27,7 @@ type BestCombinationDto
   combinedMonthlyPriceCents: Int!
   combinedMonthlyPriceYearlySubscriptionInCents: Int!
   combinedCoverage: Int!
+  index: Int!
 }
 
 type BestCombinationPackageDto
