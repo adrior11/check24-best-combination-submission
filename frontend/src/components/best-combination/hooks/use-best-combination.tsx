@@ -9,10 +9,12 @@ import type { BestCombinationResponse } from '../types';
 interface UseBestCombinationReturn {
     bestCombinations: BestCombinationResponse | undefined;
     fetchBestCombination: (selectedItems: string[], limit?: number) => Promise<void>;
+    error: string | undefined;
 }
 
 const useBestCombination = (): UseBestCombinationReturn => {
     const [bestCombinations, setBestCombinations] = useState<BestCombinationResponse | undefined>();
+    const [error, setError] = useState<string | undefined>(undefined);
 
     const fetchBestCombination = useCallback(async (selectedItems: string[], limit: number = DEFAULT_LIMIT) => {
         const POLL_INTERVAL = 50; // in ms
@@ -39,27 +41,28 @@ const useBestCombination = (): UseBestCombinationReturn => {
                         status: result.status,
                         data: sortedData,
                     });
+                    setError(undefined);
                     return;
                 } else if (result?.status === BestCombinationStatus.PROCESSING && elapsedTime < TIMEOUT) {
                     elapsedTime += POLL_INTERVAL;
                     setTimeout(fetchWithPolling, POLL_INTERVAL);
                 } else {
-                    alert('Failed to fetch best combination: Timeout exceeded');
+                    setError('Failed to fetch best combination: Timeout exceeded');
                 }
             } catch (error) {
-                alert(`Failed to fetch best combination: ${error}`);
+                setError(`Failed to reach URL. Please ensure that the backend is running`);
             }
         };
 
         if (selectedItems.length === 0) {
-            alert('Please select at least one item.');
+            setError('Please select at least one item.');
             return;
         }
 
         await fetchWithPolling();
     }, []);
 
-    return { bestCombinations, fetchBestCombination };
+    return { bestCombinations, fetchBestCombination, error };
 };
 
 export default useBestCombination;

@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 
 import useSuggestion from './hooks/use-suggestion';
 import useBestCombination from './hooks/use-best-combination';
@@ -14,7 +14,25 @@ const BestCombinationContainer: React.FC = () => {
     // Custom Hooks
     const { userInput, setUserInput, suggestion } = useSuggestion();
     const { selectedItems, addItem, removeItem } = useFinalizeInput();
-    const { bestCombinations, fetchBestCombination } = useBestCombination();
+    const { bestCombinations, fetchBestCombination, error } = useBestCombination();
+
+    // Local state for displaying the error
+    const [visibleError, setVisibleError] = useState<string | undefined>(undefined);
+
+    // Effect to handle error visibility and auto-dismiss
+    useEffect(() => {
+        if (error) {
+            setVisibleError(error);
+
+            // Set a timer to clear the error after 10 seconds
+            const timer = setTimeout(() => {
+                setVisibleError(undefined);
+            }, 10000);
+
+            // Clear the timer if the component unmounts or error changes
+            return () => clearTimeout(timer);
+        }
+    }, [error]);
 
     // Handle Button Click
     const handleButtonClick = async () => {
@@ -54,7 +72,6 @@ const BestCombinationContainer: React.FC = () => {
                         h-10
                         rounded-md
                         font-bold
-                        rounded-md
                         border-2
                         border-border
                         px-4
@@ -69,6 +86,9 @@ const BestCombinationContainer: React.FC = () => {
                     Search
                 </button>
             </div>
+
+            {/* Error Message */}
+            {visibleError && <div className="mt-2 text-red-600 text-xs">{visibleError}</div>}
 
             {/* Selected items */}
             <SelectedItems items={selectedItems} onRemoveItem={handleRemoveSelected} />

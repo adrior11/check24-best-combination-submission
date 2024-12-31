@@ -8,7 +8,7 @@ const debounceInterval = 100;
 const useSuggestion = () => {
     const [userInput, setUserInput] = useState('');
     const [suggestion, setSuggestion] = useState<string | undefined>();
-    const debounceTimer = useRef<number | null>(null);
+    const debounceTimer = useRef<number | undefined>(undefined);
 
     useEffect(() => {
         if (userInput.trim() === '') {
@@ -21,7 +21,6 @@ const useSuggestion = () => {
                 const data = await fetchGraphQL<{ getSuggestion: string }>(GET_SUGGESTION, { input: userInput });
                 setSuggestion(data.getSuggestion ?? undefined);
             } catch (error) {
-                alert(`Failed to fetch suggestion: ${error}`);
                 setSuggestion(undefined);
             }
         };
