@@ -256,6 +256,45 @@ mod tests {
     }
 
     #[test]
+    fn test_configuration_flag() {
+        dotenv::dotenv().ok();
+        let universe = BTreeSet::from([1]);
+        let subsets = vec![
+            BestCombinationSubsetDto::new(
+                1,
+                "S1",
+                BTreeSet::from([BestCombinationElementDto::new(1, "A", 1, 1)]),
+                Some(10),
+                100,
+            ),
+            BestCombinationSubsetDto::new(
+                2,
+                "S2",
+                BTreeSet::from([BestCombinationElementDto::new(1, "A", 1, 1)]),
+                Some(100),
+                10,
+            ),
+        ];
+        let limit = 1;
+
+        let expected_cover = vec![BestCombinationDto::new(
+            vec![BestCombinationPackageDto::new(
+                1,
+                "S1",
+                vec![("A", (2, 2))],
+                Some(10),
+                100,
+            )],
+            10,
+            100,
+            100,
+            0,
+        )];
+        let results = get_best_combinations(&universe, &subsets, limit);
+        assert_eq!(results, expected_cover);
+    }
+
+    #[test]
     fn test_single_full_cover() {
         dotenv::dotenv().ok();
         let universe = BTreeSet::from([1, 2, 3]);
