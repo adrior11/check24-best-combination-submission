@@ -58,7 +58,7 @@ export const CombinationCard: React.FC<CombinationCardProps> = ({ combination, i
                         </strong>
                         &nbsp;| Coverage: <strong>{combination.combinedCoverage}%</strong>
                         &nbsp;| Monthly: <strong>{formatPrice(combination.combinedMonthlyPriceCents)}</strong>
-                        &nbsp;| Yearly:
+                        &nbsp;| Yearly:{' '}
                         <strong>{formatPrice(combination.combinedMonthlyPriceYearlySubscriptionInCents)}</strong>
                     </div>
                 </div>
