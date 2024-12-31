@@ -23,6 +23,7 @@ const BestCombinationContainer: React.FC = () => {
 
     // Finalize Input
     const handleFinalizeInput = async (input: string) => {
+        setUserInput('');
         await addItem(input, suggestion);
     };
 
@@ -52,9 +53,11 @@ const BestCombinationContainer: React.FC = () => {
                     className="
                         h-10
                         rounded-md
-                        bg-primary
+                        font-bold
+                        rounded-md
+                        border-2
+                        border-border
                         px-4
-                        text-white
                         hover:opacity-90
                         transition-opacity
                         focus:outline-none
@@ -71,6 +74,7 @@ const BestCombinationContainer: React.FC = () => {
             <SelectedItems items={selectedItems} onRemoveItem={handleRemoveSelected} />
 
             {/* Best Combination UI */}
+            {/* TODO: Animation when it appears */}
             {bestCombinations?.data && <BestCombinationList combinations={bestCombinations.data} />}
         </div>
     );

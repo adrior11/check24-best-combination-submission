@@ -1,6 +1,6 @@
-// TODO: Adjust Layout
-import React, { useState } from 'react';
+// TODO: add live and highlights bubble
 
+import { formatPrice } from './util';
 import type { BestCombination } from './types';
 
 // Helper function for coverage indicators
@@ -45,81 +45,96 @@ interface CombinationCardProps {
 }
 
 export const CombinationCard: React.FC<CombinationCardProps> = ({ combination, index }) => {
-    const [isExpanded, setIsExpanded] = useState(false);
-
     // Construct a unique set of coverage keys across all packages to build matrix row labels.
     const coverageKeys = Array.from(new Set(combination.packages.flatMap(pkg => Object.keys(pkg.coverage))));
 
-    // Convert prices from cents to euros as needed
-    const monthlyPriceInEuros = (combination.combinedMonthlyPriceCents / 100).toFixed(2);
-    const yearlyPriceInEuros = (combination.combinedMonthlyPriceYearlySubscriptionInCents / 100).toFixed(2);
-
     return (
-        <div className="border rounded-md p-4 mb-4">
+        <div className="relative border-2 rounded-md p-6 mb-4">
+            {/* Badge for Best Combination */}
+            {index === 0 && (
+                <div className="absolute top-0 right-5 -translate-y-1/2 rounded-full border-2 bg-default text-xs font-bold px-3 py-1 rounded-full ">
+                    <span className="gradient-text">Best Combination</span>
+                </div>
+            )}
+
             {/* High-Level Header */}
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center mb-4">
                 <div>
-                    <h3 className="font-bold text-lg mb-1">
-                        Combination #{index + 1} ({combination.packages.length} package
-                        {combination.packages.length > 1 ? 's' : ''})
-                    </h3>
-                    <div className="text-sm text-gray-700">
-                        Coverage: <strong>{combination.combinedCoverage}%</strong>
-                        &nbsp;| Monthly: <strong>€{monthlyPriceInEuros}</strong>
-                        &nbsp;| Yearly: <strong>€{yearlyPriceInEuros}</strong>
+                    <div className="text-sm text-gray-500">
+                        <strong>
+                            {combination.packages.length} package
+                            {combination.packages.length > 1 ? 's' : ''}
+                        </strong>
+                        &nbsp;| Coverage: <strong>{combination.combinedCoverage}%</strong>
+                        &nbsp;| Monthly: <strong>{formatPrice(combination.combinedMonthlyPriceCents)}</strong>
+                        &nbsp;| Yearly:{' '}
+                        <strong>{formatPrice(combination.combinedMonthlyPriceYearlySubscriptionInCents)}</strong>
                     </div>
                 </div>
 
-                {/* Toggle button */}
-                <button onClick={() => setIsExpanded(!isExpanded)} className="text-blue-500 text-sm hover:underline">
+                {/* Removed Toggle button */}
+                {/* <button onClick={() => setIsExpanded(!isExpanded)} className="text-blue-500 text-sm hover:underline">
                     {isExpanded ? 'Hide details' : 'Show details'}
-                </button>
+                </button> */}
             </div>
 
-            {/* Expanded coverage matrix */}
-            {isExpanded && (
-                <div className="mt-4 overflow-x-auto">
-                    {/* Package names as columns */}
-                    <table className="min-w-full border-collapse text-sm">
-                        <thead>
-                            <tr>
-                                <th className="p-2 text-left border-b border-gray-200">Coverage</th>
-                                {combination.packages.map((pkg, i) => (
-                                    <th key={i} className="p-2 text-center border-b border-gray-200">
-                                        {pkg.name}
-                                        <br />
-                                        <span className="text-xs text-gray-500">
-                                            €{(pkg.monthlyPriceCents ?? 0 / 100).toFixed(2)}/mo
-                                        </span>
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {coverageKeys.map(key => {
-                                return (
-                                    <tr key={key} className="border-b last:border-none">
-                                        <td className="p-2 border-gray-200">{key}</td>
+            {/* Always Expanded Coverage Matrix */}
+            <div className="overflow-x-auto">
+                {/* Package names and prices as columns */}
+                <table className="min-w-full border-collapse text-sm">
+                    <thead>
+                        {/* First Header Row: Package Names */}
+                        <tr>
+                            <th className="p-2 text-left border-b border-gray-200">Coverage</th>
+                            {combination.packages.map((pkg, i) => (
+                                <th key={i} className="p-2 text-center border-b border-gray-200">
+                                    {pkg.name}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {coverageKeys.map(key => (
+                            <tr key={key} className="border-b last:border-none">
+                                <td className="p-2 border-gray-200">{key}</td>
 
-                                        {combination.packages.map((pkg, i) => {
-                                            const coverageArray = pkg.coverage[key];
-                                            const [liveValue, highlightValue] = coverageArray || [0, 0];
-                                            return (
-                                                <td key={i} className="p-2 text-center border-gray-200">
-                                                    <div className="flex flex-col gap-1 items-center justify-center">
-                                                        <div>{coverageIndicator(liveValue)}</div>
-                                                        <div>{coverageIndicator(highlightValue)}</div>
-                                                    </div>
-                                                </td>
-                                            );
-                                        })}
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-            )}
+                                {combination.packages.map((pkg, i) => {
+                                    const coverageArray = pkg.coverage[key];
+                                    const [liveValue, highlightValue] = coverageArray || [0, 0];
+                                    return (
+                                        <td key={i} className="p-2 text-center border-gray-200">
+                                            <div className="flex flex-row gap-1 items-center justify-center">
+                                                {/* Aligned horizontally */}
+                                                {/* TODO: Add a bit of padding between these 2 */}
+                                                <div>{coverageIndicator(liveValue)}</div>
+                                                <div>{coverageIndicator(highlightValue)}</div>
+                                            </div>
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+                        ))}
+                    </tbody>
+                    <tfoot>
+                        {/* Footer Row: Package Prices */}
+                        <tr>
+                            <th className="p-2 text-left border-b border-gray-200"></th> {/* Empty cell */}
+                            {combination.packages.map((pkg, i) => (
+                                <th key={i} className="p-2 text-center border-b border-gray-200">
+                                    <div className="flex flex-col items-center">
+                                        <span className="text-xs text-gray-500">
+                                            {formatPrice(pkg.monthlyPriceCents ?? 0)}/m
+                                        </span>
+                                        <span className="text-xs text-gray-500">
+                                            {formatPrice(pkg.monthlyPriceYearlySubscriptionInCents)}/y
+                                        </span>
+                                    </div>
+                                </th>
+                            ))}
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
         </div>
     );
 };
