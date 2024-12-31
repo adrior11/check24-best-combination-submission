@@ -12,6 +12,7 @@ export interface Package {
 }
 
 export interface BestCombination {
+    index: number;
     combinedCoverage: number;
     combinedMonthlyPriceCents: number;
     combinedMonthlyPriceYearlySubscriptionInCents: number;

@@ -32,7 +32,13 @@ const useBestCombination = (): UseBestCombinationReturn => {
                 const result = response.getBestCombination;
 
                 if (result?.status === BestCombinationStatus.READY) {
-                    setBestCombinations(result);
+                    // Sort the combinations by index in ascending order
+                    const sortedData = result.data ? [...result.data].sort((a, b) => a.index - b.index) : undefined;
+
+                    setBestCombinations({
+                        status: result.status,
+                        data: sortedData,
+                    });
                     return;
                 } else if (result?.status === BestCombinationStatus.PROCESSING && elapsedTime < TIMEOUT) {
                     elapsedTime += POLL_INTERVAL;

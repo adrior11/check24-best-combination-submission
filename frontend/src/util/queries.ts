@@ -21,6 +21,7 @@ export const GET_BEST_COMBINATION = `
         getBestCombination(input: $input, opts: $opts) {
             status
             data {
+                index
                 combinedCoverage
                 combinedMonthlyPriceCents
                 combinedMonthlyPriceYearlySubscriptionInCents
