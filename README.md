@@ -113,7 +113,7 @@ password: example
 ![tech_stack](assets/tech_stack.png)
 
 **Technologies Used:**
-- **Rust:** Fast, memory-safe, and enjoyable to work with.
+- **Rust:** Why? I love rust. Fast, memory-safe, and enjoyable to work with. 🤠
 - **MongoDB:** Chosen for persistence with MongoDB Compass and indexes for convenience and maintainability.
 - **Redis:** Used to store best combination results in cache to mitigate the need to enqueue jobs to the worker-services.
 - **RabbitMQ:** Delegates best combination workloads to distributed worker nodes that pick jobs from the queue and store their results in cache.
