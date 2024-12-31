@@ -1,5 +1,8 @@
 # check24-best-combination-submission
 
+## 📀 Submission Video
+You can find the video on [YouTube](https://youtu.be/LAXtcj1Vctc).
+
 ## 🛠️ How to Run Locally
 
 ### 📋 Prerequisites
