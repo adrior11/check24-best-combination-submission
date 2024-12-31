@@ -1,12 +1,17 @@
 use once_cell::sync::Lazy;
 use serde::Deserialize;
 
+fn default_use_yearly_price() -> bool {
+    false
+}
+
 #[derive(Clone, Deserialize, Debug)]
 pub struct Config {
     pub mongodb_uri: String,
     pub redis_url: String,
     pub rabbitmq_url: String,
     pub task_queue_name: String,
+    #[serde(default = "default_use_yearly_price")]
     pub use_yearly_price: bool,
 }
 
