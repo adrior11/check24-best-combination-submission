@@ -74,7 +74,6 @@ const BestCombinationContainer: React.FC = () => {
             <SelectedItems items={selectedItems} onRemoveItem={handleRemoveSelected} />
 
             {/* Best Combination UI */}
-            {/* TODO: Animation when it appears */}
             {bestCombinations?.data && <BestCombinationList combinations={bestCombinations.data} />}
         </div>
     );

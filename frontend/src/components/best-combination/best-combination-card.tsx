@@ -1,5 +1,3 @@
-// TODO: add live and highlights bubble
-
 import { formatPrice } from './util';
 import type { BestCombination } from './types';
 
@@ -73,17 +71,24 @@ export const CombinationCard: React.FC<CombinationCardProps> = ({ combination, i
                 </div>
             </div>
 
-            {/* Always Expanded Coverage Matrix */}
+            {/* Coverage Matrix */}
             <div className="overflow-x-auto">
-                {/* Package names and prices as columns */}
                 <table className="min-w-full border-collapse text-sm">
                     <thead>
-                        {/* First Header Row: Package Names */}
+                        {/* Header Row: Package Names */}
                         <tr>
-                            <th className="p-2 text-left border-b border-gray-200">Coverage</th>
+                            <th className="p-2 text-left border-b border-gray-200"></th>
                             {combination.packages.map((pkg, i) => (
                                 <th key={i} className="p-2 text-center border-b border-gray-200">
                                     {pkg.name}
+                                    <div className="mt-1 flex flex-row items-center justify-center space-x-2">
+                                        <span className="text-xs px-1.5 py-0.5 text-gray-500 rounded-full bg-offset">
+                                            Live
+                                        </span>
+                                        <span className="text-xs px-1.5 py-0.5 text-gray-500 rounded-full bg-offset">
+                                            Highl.
+                                        </span>
+                                    </div>
                                 </th>
                             ))}
                         </tr>
@@ -91,15 +96,13 @@ export const CombinationCard: React.FC<CombinationCardProps> = ({ combination, i
                     <tbody>
                         {coverageKeys.map(key => (
                             <tr key={key} className="border-b">
-                                {/* Updated class */}
                                 <td className="p-2 border-gray-200">{key}</td>
                                 {combination.packages.map((pkg, i) => {
                                     const coverageArray = pkg.coverage[key];
                                     const [liveValue, highlightValue] = coverageArray || [0, 0];
                                     return (
                                         <td key={i} className="p-2 text-center border-gray-200">
-                                            <div className="flex flex-row gap-2 items-center justify-center">
-                                                {/* Updated gap */}
+                                            <div className="flex flex-row gap-3 items-center justify-center">
                                                 <div>{coverageIndicator(liveValue)}</div>
                                                 <div>{coverageIndicator(highlightValue)}</div>
                                             </div>
