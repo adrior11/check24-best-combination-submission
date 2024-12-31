@@ -52,7 +52,7 @@ export const CombinationCard: React.FC<CombinationCardProps> = ({ combination, i
         <div className="relative border-2 rounded-md p-6 mb-4">
             {/* Badge for Best Combination */}
             {index === 0 && (
-                <div className="absolute top-0 right-5 -translate-y-1/2 rounded-full border-2 bg-default text-xs font-bold px-3 py-1 rounded-full ">
+                <div className="absolute top-0 right-5 -translate-y-1/2 rounded-full border-2 bg-default text-xs font-bold px-3 py-1">
                     <span className="gradient-text">Best Combination</span>
                 </div>
             )}
@@ -67,15 +67,10 @@ export const CombinationCard: React.FC<CombinationCardProps> = ({ combination, i
                         </strong>
                         &nbsp;| Coverage: <strong>{combination.combinedCoverage}%</strong>
                         &nbsp;| Monthly: <strong>{formatPrice(combination.combinedMonthlyPriceCents)}</strong>
-                        &nbsp;| Yearly:{' '}
+                        &nbsp;| Yearly:
                         <strong>{formatPrice(combination.combinedMonthlyPriceYearlySubscriptionInCents)}</strong>
                     </div>
                 </div>
-
-                {/* Removed Toggle button */}
-                {/* <button onClick={() => setIsExpanded(!isExpanded)} className="text-blue-500 text-sm hover:underline">
-                    {isExpanded ? 'Hide details' : 'Show details'}
-                </button> */}
             </div>
 
             {/* Always Expanded Coverage Matrix */}
@@ -95,17 +90,16 @@ export const CombinationCard: React.FC<CombinationCardProps> = ({ combination, i
                     </thead>
                     <tbody>
                         {coverageKeys.map(key => (
-                            <tr key={key} className="border-b last:border-none">
+                            <tr key={key} className="border-b">
+                                {/* Updated class */}
                                 <td className="p-2 border-gray-200">{key}</td>
-
                                 {combination.packages.map((pkg, i) => {
                                     const coverageArray = pkg.coverage[key];
                                     const [liveValue, highlightValue] = coverageArray || [0, 0];
                                     return (
                                         <td key={i} className="p-2 text-center border-gray-200">
-                                            <div className="flex flex-row gap-1 items-center justify-center">
-                                                {/* Aligned horizontally */}
-                                                {/* TODO: Add a bit of padding between these 2 */}
+                                            <div className="flex flex-row gap-2 items-center justify-center">
+                                                {/* Updated gap */}
                                                 <div>{coverageIndicator(liveValue)}</div>
                                                 <div>{coverageIndicator(highlightValue)}</div>
                                             </div>
@@ -118,9 +112,9 @@ export const CombinationCard: React.FC<CombinationCardProps> = ({ combination, i
                     <tfoot>
                         {/* Footer Row: Package Prices */}
                         <tr>
-                            <th className="p-2 text-left border-b border-gray-200"></th> {/* Empty cell */}
+                            <th className="p-2 text-left"></th>
                             {combination.packages.map((pkg, i) => (
-                                <th key={i} className="p-2 text-center border-b border-gray-200">
+                                <th key={i} className="p-2 text-center">
                                     <div className="flex flex-col items-center">
                                         <span className="text-xs text-gray-500">
                                             {formatPrice(pkg.monthlyPriceCents ?? 0)}/m
