@@ -403,6 +403,8 @@ $ cargo bench -v
 ### 🚦 Loadtests
 I conducted load tests to assess how the backend performs under high usage:
 
+![loadtest](assets/loadtest.png)
+
 The results indicate that the average response time is processed in less than **50ms**, making it suitable for real-world usage and ensuring a responsive UI.
 
 You can conduct the load test using the dashboards for monitoring the API:
