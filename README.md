@@ -64,10 +64,10 @@ $ cd frontend
 $ pnpm i
 $ pnpm run dev
 ```
-The frontend should now be accessible with `Astro` on [localhost:4321](http://localhost:4321)
+The frontend should now be accessible with `Astro` on [http://localhost:4321](http://localhost:4321)
 
 ### 📈 Dashboards
-Once you've started the containerized environment, additional dashboard and utilities become available.
+Once you've started the containerized environment, additional dashboards and utilities become available.
 
 #### Apollo Sandbox
 You can test the GraphQL endpoints via the Apollo gateway at the Apollo Sandbox: [http://localhost:4000](http://localhost:4000)
@@ -77,7 +77,7 @@ Feel free to test the endpoints for the best combinations and to understand the 
 #### RabbitMQ 
 Track the queues, consumers, and messages related to the `api-service` and `worker-services` at [http://localhost:15672](http://localhost:15672).
 
-If not changes via the `.env` the credentials are:
+If not changed via the `.env` the credentials are:
 ```
 username: root
 password: example
