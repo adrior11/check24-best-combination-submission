@@ -105,7 +105,7 @@ password: example
 - **RabbitMQ:** Delegates best combination workloads to distributed worker nodes that pick jobs from the queue and store their results in cache.
 - **Docker:** Orchestration tool for the distributed systems.
 - **Apollo:** Combines the services’ GraphQL endpoints into a single API for ease of use by the frontend.
-- **GraphQL:** Preferred over REST for dynamic data retrieval tailored to the client’s needs.
+- **GraphQL:** Preferred over REST for dynamic data retrieval tailored to the client's needs.
 - **Prometheus:** Introduces metrics for the services, allowing them to be monitored.
 - **Grafana:** Visualizes the scraped metrics from Prometheus in dashboards.
 - **GitHub (Actions):** Ensures working production code through continuous integration.
@@ -122,10 +122,12 @@ password: example
 ### 🔍 Set Cover Best Combinations Algorithm
 
 #### 📚 Overview
-Given the provided dataset for the challenge and the requirement of finding the best combination of packages, this problem can be described as a Set Cover problem. The core of this project implements a recursive approach to the Set Cover problem, enumerating multiple optimal combinations based on a greedy cost-based strategy. The algorithm identifies all best combinations of streaming package subsets that cover a given universe of game IDs, considering both exact and approximate coverage scenarios.
+Given the provided dataset for the challenge and the requirement of finding the best combination of packages, this problem can be described as a [Set Cover problem](https://en.wikipedia.org/wiki/Set_cover_problem).
+The core of this project implements a recursive approach to the Set Cover problem, enumerating multiple optimal combinations based on a greedy cost-based strategy.
+The algorithm identifies all best combinations of streaming package subsets that cover a given universe of game IDs, considering both exact and approximate coverage scenarios.
 
 #### ⁉️ Problem
-Using a basic iterative set cover algorithm would yield a solution. However, given the use case and the fact that there’s no polynomial-time solution, a more optimized approach is necessary to handle the specific requirements effectively.
+Using a basic iterative set cover algorithm would yield a solution. However, given the use case and the fact that there's no polynomial-time solution (NP-hardness), a more optimized approach is necessary to handle the specific requirements effectively.
 
 #### 📐 Mathematical Definitions
 
@@ -362,7 +364,8 @@ fn enumerate_best_combinations(
 > You can adjust the ratio behavior via the .env file by setting `USE_YEARLY_PRICE` to true, which configures the algorithm to build ratios based on yearly subscription prices.
 
 ### ⚡️ Benchmarking
-From the beginning of this project, my primary goal was not only to find a solution for the best combination but also to ensure it was fast and capable of finding alternatives. I benchmarked my initial solution, which was a basic iterative set cover algorithm, against the final version assuming the **worst-case scenario** of all game IDs:
+From the beginning of this project, my primary goal was not only to find a solution for the best combination but also to ensure it was fast and capable of finding alternatives.
+I benchmarked my initial solution, which was a basic iterative set cover algorithm, against the final version assuming the **worst-case scenario** of all game IDs:
 
 **Iterative:**
 ![set_cover_comp_1](assets/set_cover_comp_1.png)
@@ -404,10 +407,15 @@ $ k6 run loadtests/loadtest.js
 > [!NOTE]
 > Please note that the benchmark and load test data were gathered on an M1 MacBook Pro. Results may vary depending on the system.
 
-During load tests, it was notable that the workers took a significant amount of time to acknowledge messages received via the queue. This delay is due to the preprocessing of the best combinations subset. The aggregation pipeline utilizes two nested `$lookup` operations, which introduces substantial overhead, as seen via the RabbitMQ dashboard:
+During load tests, it was notable that the workers took a significant amount of time to acknowledge messages received via the queue.
+This delay is due to the preprocessing of the best combinations subset.
+The aggregation pipeline utilizes two nested `$lookup` operations, which introduces substantial overhead, as seen via the RabbitMQ dashboard:
 
 ![unoptimized-aggregation](assets/unoptimized-aggregation.png)
 > Red: jobs enqueued; Purple: jobs acknowledged
+
+**Dataset:**
+![db](assets/db.png)
 
 **Pipeline:**
 ```
@@ -471,7 +479,8 @@ After benchmarking and profiling, this was identified as the only remaining bott
 More information on these approaches can be found [here](https://www.mongodb.com/docs/atlas/schema-suggestions/reduce-lookup-operations/?utm_source=compass&utm_medium=product#learn-more).
 
 Given the provided dataset i've stayed away from these 2 approaches, as i wanted to stay true to the original data schema. Thus i've build my api around polling and prefetching. 
-As the user enters and removes entries one by one via the UI we can enqueue mutations, which will preload the Cache with results. Thus when the client want's to actually retrieve the final best combinations, he'll still receive the desired data in less than **50ms** average.
+As the user enters and removes entries one by one via the UI we can enqueue mutations, which will preload the Cache with results.
+Thus when the client want's to actually retrieve the final best combinations, he'll still receive the desired data in less than **50ms** average.
 
 ## License
 This project is available under the MIT License.
