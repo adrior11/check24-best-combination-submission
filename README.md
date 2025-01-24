@@ -64,13 +64,13 @@ $ cd frontend
 $ pnpm i
 $ pnpm run dev
 ```
-The frontend should now be accessible with `Astro` on [http://localhost:4321](http://localhost:4321)
+The frontend should now be accessible with `Astro` on [http://localhost:4321](http://localhost:4321).
 
 ### 📈 Dashboards
 Once you've started the containerized environment, additional dashboards and utilities become available.
 
 #### Apollo Sandbox
-You can test the GraphQL endpoints via the Apollo gateway at the Apollo Sandbox: [http://localhost:4000](http://localhost:4000)
+You can test the GraphQL endpoints via the Apollo gateway at the Apollo Sandbox: [http://localhost:4000](http://localhost:4000).
 
 Feel free to test the endpoints for the best combinations and to understand the data structures used for the frontend UI.
 
@@ -362,7 +362,7 @@ fn enumerate_best_combinations(
 > You can adjust the ratio behavior via the .env file by setting `USE_YEARLY_PRICE` to true, which configures the algorithm to build ratios based on yearly subscription prices.
 
 ### ⚡️ Benchmarking
-From the beginning of this project, my primary goal was not only to find a solution for the best combination but also to ensure it was fast and capable of finding alternatives. I benchmarked my initial solution, which was a basic iterative set cover algorithm, against the final version assuming the worst-case scenario of all game IDs:
+From the beginning of this project, my primary goal was not only to find a solution for the best combination but also to ensure it was fast and capable of finding alternatives. I benchmarked my initial solution, which was a basic iterative set cover algorithm, against the final version assuming the **worst-case scenario** of all game IDs:
 
 **Iterative:**
 ![set_cover_comp_1](assets/set_cover_comp_1.png)
@@ -410,7 +410,51 @@ During load tests, it was notable that the workers took a significant amount of 
 > Red: jobs enqueued; Purple: jobs acknowledged
 
 **Pipeline:**
-![preprocess](assets/preprocess.png)
+```
+"$lookup": {
+    "from": "bc_streaming_offer",
+    "localField": "streaming_package_id",
+    "foreignField": "streaming_package_id",
+    "as": "offers",
+    "pipeline": [
+        {
+            "$match": {
+                "game_id": {
+                    "$in":  game_ids
+                }
+            }
+        },
+        {
+            "$lookup": {
+                "from": "bc_game",
+                "localField": "game_id",
+                "foreignField": "game_id",
+                "as": "game",
+                "pipeline": [
+                    {
+                        "$project": {
+                            "_id": 0,
+                            "tournament_name": 1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "$unwind": "$game"
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "game_id": 1,
+                "tournament_name": "$game.tournament_name",
+                "live": 1,
+                "highlights": 1,
+            }
+        }
+    ]
+}
+```
 
 After benchmarking and profiling, this was identified as the only remaining bottleneck.
 
@@ -428,3 +472,6 @@ More information on these approaches can be found [here](https://www.mongodb.com
 
 Given the provided dataset i've stayed away from these 2 approaches, as i wanted to stay true to the original data schema. Thus i've build my api around polling and prefetching. 
 As the user enters and removes entries one by one via the UI we can enqueue mutations, which will preload the Cache with results. Thus when the client want's to actually retrieve the final best combinations, he'll still receive the desired data in less than **50ms** average.
+
+## License
+This project is available under the MIT License.
