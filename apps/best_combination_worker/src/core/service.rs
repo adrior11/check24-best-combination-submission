@@ -62,7 +62,7 @@ pub fn get_best_combinations(
 /// it attempts to build complete solutions by selecting subsets:
 ///
 /// 1. At each recursive call, it evaluates which subsets best improve coverage of the remaining uncovered games.
-/// 2. It selects the next best candidate according to the cost per uncovered games
+/// 2. It selects the next best candidate according to the cost per uncovered games.
 /// 3. If a full cover is found or it reaches a leaf node, the current combination is recorded as a solution.
 /// 4. The function then attempts to find more solutions (up to the specified `limit`) by backtracking and trying
 ///    alternate subsets.
@@ -192,7 +192,7 @@ mod tests {
             mongo_client.get_collection(STREAMING_PACKAGE_COLLECTION_NAME),
         );
 
-        // Game 8533 of Bayer Muenchen isn't covered by a single offer.
+        // Game 8533 of Bayern Muenchen isn't covered by a single offer.
         // The Coverage will never be able to reach 100% given this case.
         let game_ids = vec![
             52, 69, 76, 79, 103, 89, 113, 121, 125, 139, 146, 151, 161, 171, 186, 193, 196, 212,

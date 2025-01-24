@@ -223,7 +223,7 @@ mod tests {
                 id: 2,
                 elements: BTreeSet::from([1]),
                 cost: 5,
-            }, // Same as above
+            },
             Subset {
                 id: 3,
                 elements: BTreeSet::from([2]),

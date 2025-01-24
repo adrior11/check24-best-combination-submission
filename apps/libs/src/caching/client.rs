@@ -1,7 +1,7 @@
 use anyhow::Context;
 use redis::{Client, Cmd, ErrorKind, RedisError};
 
-/// Type alias for the Redis client
+/// Type alias for the Redis client.
 pub type RedisClient = Client;
 
 /// Initializes a connection to the Redis server.
